@@ -2,18 +2,7 @@ import os
 #os.environ["NUMBA_DISABLE_JIT"] = "1"
 
 import numpy as np
-#import scipy
-#import numba as nb
-#from numba import float64, int32, int64, uint64, int8, jit, prange, config, threading_layer
-#from numba.experimental import jitclass
-
-#from scipy.stats import kendalltau
-#from collections import namedtuple
-#from tqdm import tqdm, tqdm_notebook
-#from scipy import special
 from time import time
-
-num_threads = 84
 
 from parallel_maker import parallel_execute, make_args
 import kendaltau_corr
@@ -21,114 +10,74 @@ import kendaltau_corr_online
 import kendaltau_corr_scipy
 
 import numpy as np
-import os
 from pathlib2 import Path
 
-work_dir = Path(r'All2019_6h_0.75resolution')
-file_name = 'resulting_cube_All2019_6h_0.75resolution.npz'
-data = np.load(work_dir / file_name)
-data_s = data['arr_0'].transpose((1, 2, 0))
+def load_data():
+    work_dir = Path(r'All2019_6h_0.75resolution')
+    file_name = 'resulting_cube_All2019_6h_0.75resolution.npz'
+    data = np.load(work_dir / file_name)
+    data_s = data['arr_0'].transpose((1, 2, 0))
 
-data = data_s.reshape(-1, data_s.shape[2])
-data = data[~np.any(np.isnan(data), axis = 1), :]
+    data = data_s.reshape(-1, data_s.shape[2])
+    data = data[~np.any(np.isnan(data), axis = 1), :]
 
-print(data.shape)
+    print(data.shape)
+    data_all = data.copy()
+    data = data_all[:n*m, :nt].astype(np.float64)
 
-np.random.seed(42)
-n = 1
-m = 1
-nt = 90
-#data_s = np.random.rand(n, m, nt).astype(np.float64)
-#data_s = np.random.randint(10, size = (n, m, nt)).astype(np.float64)
+    nm, nt = data.shape
 
-#data = data_s.reshape(-1, data_s.shape[2])
-data_all = data.copy()
-data = data_all[:n*m, :nt].astype(np.float64)
+    print(data.shape)
 
-nm, nt = data.shape
+    return data
 
-print(data.shape)
-#test_parallel = make_multithread(test, 1)
-#test_parallel(np.zeros((10, 10)), np.array(list(range(10))))
+def calc_online_optimized(data, delay_time, window_size):
+    # Third optimization
+    tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
+    kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+    if config.debug_level:
+        print('res:', tau_corr.sum())
+    return tau_corr
 
-#nb.set_num_threads(10)
+def calc_numba_optimized(data, delay_time, window_size, ans = None):
+    # Second optimization
+    ans = np.zeros((nm, nm, nt), dtype = np.float64)
+    kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+    if config.debug_level:
+        if ans not is None:
+            print('ans = ', ans.sum())
+            print('diff1 = ', (np.abs(ans - tau_corr)).max())
 
-#compute_tau_kendall_overall_parallel = make_multithread(compute_tau_kendall_overall, 10)
-#tau_corr = compute_tau_kendall_overall_parallel(np.zeros((10, 10)), np.arange(10))
+def calc_scipy(data, delay_time, window_size, ans = None)
+    # Correct implementation
+    sans = kendaltau_corr_scipy.compute_tau_kendall_overall(data, delay_time = delay_time, window_size = window_size)
+    print('sans = ', sans.sum())
 
-#tau_corr = np.zeros((2, 2, 90), dtype = np.float64)
-#test(tau_corr, np.zeros((10, 10)), np.array(list(range(10))))
-delay_time = 28
-window_size = 60
-tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
-kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-print('res:', tau_corr.sum())
+    print('diff2 = ', (np.abs(ans - sans)).max())
+    print(data[:, 1])
 
-#tau_corr = np.zeros((2, 2, 90), dtype = np.float64)
-ans = np.zeros((nm, nm, nt), dtype = np.float64)
-kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-print('ans = ', ans.sum())
-print('diff1 = ', (np.abs(ans - tau_corr)).max())
+def calc_parallel_online_optimized(config, data, delay_time, window_size, num_threads = 1, ans = None)
+    # Paralleled optimized implementation
+    data = data_all.astype(np.float64)#[:n*m, :nt].astype(np.float64)
+    nm, nt = data.shape
+    print(nm, nt)
 
-sans = kendaltau_corr_scipy.compute_tau_kendall_overall(data, delay_time = delay_time, window_size = window_size)
-print('sans = ', sans.sum())
+    be = time()
+    result = np.zeros((nm, nm, nt), dtype=data.dtype)
+    parallel_execute(num_threads, kendaltau_corr_online.compute_tau_kendall_overall_online, make_args(num_threads, result, data))
+    en = time()
+    print('Time fast:', en - be)
 
-print('diff2 = ', (np.abs(ans - sans)).max())
-print(data[:, 1])
+def save_result():
+    'corr_online_All2019_6h_resolution_0.75_window_15d_delay_7d.npy'
+    np.save(, result)
+    print('res =', result.sum())
 
-
-#print(tau_corr[:, :, window_size:])
-#print(sans[:, :, window_size:])
-
-#res = test(data)
-#tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
-#test(tau_corr, data, np.array(list(range(10))))
-#tau_corr = compute_tau_kendall_overall(data)
-#tau_corr = compute_tau_kendall_overall_parallel(data, np.arange(data.shape[0]))
-#res = test_parallel(data, np.array(list(range(data.shape[0]))))
-
-#ans = corr_network_scipy.compute_tau_kendall_overall(data)
-#n = 50
-#m = 10
-#nt = data_all.shape[1]
-
-data = data_all.astype(np.float64)#[:n*m, :nt].astype(np.float64)
-nm, nt = data.shape
-print(nm, nt)
-
-'''be = time()
-ans = np.zeros((nm, nm, nt), dtype=data.dtype)
-#parallel_execute(num_threads, test, make_args(num_threads, result, data))
-
-parallel_execute(num_threads, kendaltau_corr.compute_tau_kendall_overall, make_args(num_threads, ans, data))
-en = time()
-print('Time ok:', en - be)'''
-
-be = time()
-result = np.zeros((nm, nm, nt), dtype=data.dtype)
-parallel_execute(num_threads, kendaltau_corr_online.compute_tau_kendall_overall_online, make_args(num_threads, result, data))
-#print(result)
-#print(ans)
-'''window_size = 15 * 4 
-corr = kendaltau_corr(window_size)
+def compute_correlation_matricies(config):
+    #delay_time = 28
+    #window_size = 60
+    delay_time = config.correlations.delay_time
+    window_size = config.correlations.window_size
+    num_threads = config.correlations.num_threads
 
 
-def get_ranks(x, y):
-    size = x.size
-    perm = np.argsort(y)  # sort on y and convert y to dense ranks
-    x, y = x[perm], y[perm]
-    y = np.concatenate([[True], y[1:] != y[:-1]]).cumsum(dtype=np.intp)
-
-    # stable sort on x and convert x to dense ranks
-    perm = np.argsort(x, kind='mergesort')
-    x, y = x[perm], y[perm]
-    x = np.concatenate([[True], x[1:] != x[:-1]]).cumsum(dtype=np.intp)
-    return x, y'''
-
-
-en = time()
-print('Time fast:', en - be)
-np.save('corr_online_All2019_6h_resolution_0.75_window_15d_delay_7d.npy', result)
-print('res =', result.sum())
-#print('diff =', np.max(np.abs(ans - result)))
-#print("Threading layer chosen: %s" % threading_layer())
