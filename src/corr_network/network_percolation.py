@@ -5,7 +5,7 @@ import numpy as np
 from numba import float64, int32, int64, uint64, int8, jit
 from numba.experimental import jitclass
 
-import numba_config
+from . import numba_config
 from pathlib2 import Path
 
 spec = [

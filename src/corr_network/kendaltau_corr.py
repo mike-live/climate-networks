@@ -1,8 +1,8 @@
 from numba import float64, int32, int64, uint64, int8, jit, prange, config, threading_layer
 from numba.experimental import jitclass
 import math
-from kendalltau_helpers import *
-import numba_config
+from .kendalltau_helpers import *
+from . import numba_config
 import numpy as np
 
 
