@@ -2,10 +2,7 @@ from .clustering_coef import compute_clustering_coefficient
 from helpers.parallel_maker import parallel_execute, make_args
 
 def compute_metrics(result, corr_matricies, ids):
-    print(corr_matricies.shape)
-    print(ids[0], ids[-1])
     for tid in ids:
-        print(tid)
         LCC, GCC = compute_clustering_coefficient(corr_matricies[tid])
         result[tid] = {'LCC': LCC, 'GCC': GCC}
 
