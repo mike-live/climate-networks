@@ -7,9 +7,8 @@ def parallel_execute(num_threads, func, args):
             f.result()
 
 def make_args(num_tasks, result, data):
-    nm, nt = data.shape
-    ids = np.arange(nm)
-    length = nm
+    length = data.shape[0]
+    ids = np.arange(length)
     chunklen = (length + num_tasks - 1) // num_tasks
     chunks = [(result, data, ids[i * chunklen:(i + 1) * chunklen]) for i in range(num_tasks)]
     return chunks
