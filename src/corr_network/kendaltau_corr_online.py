@@ -363,7 +363,7 @@ def compute_tau_kendall_overall_online(tau_corr, data, ids, window_size = 15 * 4
     cur1 = np.zeros(window_size, dtype = data.dtype)
     cur2 = np.zeros(window_size, dtype = data.dtype)
     for i in ids:
-        print(ids[0], '<=', i, '<=', ids[-1], 'percent', (i - ids[0]) / (ids[-1] - ids[0] + 1))
+        #print(ids[0], '<=', i, '<=', ids[-1], 'percent', (i - ids[0]) / (ids[-1] - ids[0] + 1))
         for j in range(nm):
             for t in range(nt):
                 tau_corr[i, j, t] = 0

@@ -48,7 +48,6 @@ class kendalltau_corr_online:
         self.window = window
         self.data = data
         self.window_64 = (window + 64) // 64
-        print('window_64', self.window_64)
         self.subset = np.zeros(self.window_64, dtype = np.uint64)
 
         self.tot = self.window * (self.window - 1) // 2
@@ -421,8 +420,8 @@ def compute_tau_kendall_overall_online_bitset(tau_corr, data, ids, window_size =
     #print(ids[0], len(ids))
     nm, nt = data.shape
     corr = kendalltau_corr_online(data, window_size)
-    print(nm, nt)
-    print(tau_corr.shape)
+    #print(nm, nt)
+    #print(tau_corr.shape)
 
     y1 = np.zeros(nt, dtype = data.dtype)
     y2 = np.zeros(nt, dtype = data.dtype)
@@ -448,6 +447,6 @@ def compute_tau_kendall_overall_online_bitset(tau_corr, data, ids, window_size =
                         #best_pv = pv
                         tau_corr[i, j, t] = ktau
                     corr.move_window()
-    print(ids[0], '-', ids[-1], 'finish')
+    #print(ids[0], '-', ids[-1], 'finish')
 
 
