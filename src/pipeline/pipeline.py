@@ -6,7 +6,8 @@ def load_config(config_name):
     return config
 
 def download_data(config):
-    pass
+    from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
+    download_and_preprocessing_ERA5_data(config.download_ERA5_options)
 
 def make_corr_networks(config):
     from corr_network.corr_network import make_correlation_matricies
