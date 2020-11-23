@@ -14,4 +14,26 @@ correlations = {
     'num_threads': 2,
 }
 
+download_ERA5_options = {
+    'work_dir': 'ERA5/ERA5_MSLP_1982_2019_3h_0.75_new/',
+    'pref': 'ERA5_MSLP_1982_2019_3h_0.75',
+    'variable': 'mean_sea_level_pressure',   #'mean_sea_level_pressure' or 'sea_surface_temperature'
+    'name_var': 'msl',                       #'msl' or 'sst'
+    'land_mask': True,
+    'preprocessing': True,
+    'start_year': 1982,
+    'end_year': 2019,
+    'start_month': 1,
+    'end_month': 12,
+    'start_day': 1,
+    'end_day': 31,
+    'start_time': 0,
+    'end_time': 21,
+    'step_time': 3,
+    'north': 30.75, 
+    'west': 49.5,
+    'south': 4.5,
+    'east': 100.5,   
+}
+
 debug_level = 1
