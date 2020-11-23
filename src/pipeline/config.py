@@ -15,7 +15,7 @@ correlations = {
 }
 
 download_ERA5_options = {
-    'work_dir': 'ERA5/ERA5_MSLP_1982_2019_3h_0.75_new/',
+    'work_dir': 'ERA5/ERA5_MSLP_1982_2019_3h_0.75/',
     'pref': 'ERA5_MSLP_1982_2019_3h_0.75',
     'variable': 'mean_sea_level_pressure',   #'mean_sea_level_pressure' or 'sea_surface_temperature'
     'name_var': 'msl',                       #'msl' or 'sst'
