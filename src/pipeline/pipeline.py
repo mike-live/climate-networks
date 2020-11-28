@@ -30,8 +30,6 @@ def compute_metrics_by_parts(config):
         corr_networks = make_corr_networks(config)
         corr_networks = np.moveaxis(corr_networks, -1, 0)
         metrics += parallel_compute_metrics(config, corr_networks)
-        metrics_file_name = config.network_metrics['work_dir'] / config.network_metrics['output_metrics_file_name']
-        np.save(metrics_file_name, metrics)
     print(len(metrics))
     print(metrics[0])
     metrics_file_name = config.network_metrics['work_dir'] / config.network_metrics['output_metrics_file_name']
