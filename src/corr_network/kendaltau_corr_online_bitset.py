@@ -2,7 +2,7 @@ from numba import float64, int32, int64, uint64, int8, jit, prange, config, thre
 from numba.experimental import jitclass
 import math
 from .kendalltau_helpers import *
-from . import numba_config
+from helpers import numba_config
 import numpy as np
 
 spec_kendal_tau = [

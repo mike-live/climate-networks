@@ -1,31 +1,54 @@
 import time
 import numpy as np
+from numba import jit
+from helpers import numba_config
 
+@jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache, error_model="numpy")
 def compute_clustering_coefficient(a):
 	(n, m) = a.shape
 
 	Ci = np.empty(n)
 
 	Div = np.sqrt(1-np.multiply(a, a))
-	Ridx1, Ridx2 = np.triu_indices(n, 1)
-	mymask = np.ones((n, n), dtype=bool)
+	#Ridx1, Ridx2 = np.triu_indices(n, 1)
+	#mymask = np.ones((n, n), np.bool_)
 
 	for i in range(n):
-		M = np.outer(a[i,:], a[i,:])
-		D = np.outer(Div[i,:],Div[i,:])
-		mymask[Ridx1, Ridx2] = False
+		#M = np.outer(a[i,:], a[i,:])
+		#D = np.outer(Div[i,:],Div[i,:])
+		'''for p1, p2 in zip(Ridx1, Ridx2):
+			mymask[p1, p2] = False
 		mymask[i, :] = True
-		mymask[:,i] = True
-		M1 = np.ma.array(np.fabs(M),mask=mymask)
-		r1 = np.ma.array(a,mask=mymask)
-		up1 = np.ma.subtract(r1, M)
-		ro = np.ma.divide(up1, D)
-		up2 = np.ma.multiply(M, ro)
-		up2abs = np.ma.fabs(up2)
-		sumUp = np.ma.sum(up2abs)
-		sumDown = np.ma.sum(M1)
-		Ci[i] = sumUp / sumDown
+		mymask[:, i] = True'''
+		sumDown = sumUp = 0.0
+		for j in range(n):
+			for k in range(n):
+				if j == i or i == k or (j <= k):
+					M = a[i, j] * a[i, k]
+					D = Div[i, j] * Div[i, k]
+					ro = (a[j, k] - M) / D
+					up2abs = np.abs(M * ro)
+					sumUp += up2abs
+					sumDown += np.abs(M)
+		if sumDown == 0:
+			Ci[i] = np.nan
+		else:
+			Ci[i] = sumUp / sumDown
 
-	Cglob = np.average(Ci)
+		'''M1 = np.fabs(M)
+		r1 = a
+		up1 = r1 - M
+		ro = up1 / D
+		up2 = M * ro
+		up2abs = np.fabs(up2)
+		sumDown = sumUp = 0
+		for j in range(n):
+			for k in range(n):
+				if mymask[j, k]:
+					sumUp += up2abs[j, k]
+					sumDown += M1[j, k]
+		Ci[i] = sumUp / sumDown'''
+
+	Cglob = np.mean(Ci)
 	return Ci, Cglob
 

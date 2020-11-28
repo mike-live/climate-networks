@@ -11,7 +11,7 @@ correlations = {
 #    'output_correlation_var_name': 'result',
     'delay_time': 0,
     'window_size': 80,
-    'num_threads': 5,
+    'num_threads': 85,
     'need_save': False,
     'num_parts': 666,
     'id_part': 1,
@@ -19,7 +19,7 @@ correlations = {
 }
 
 network_metrics = {
-    'num_threads': 1,
+    'num_threads': 84,
     'work_dir': correlations['work_dir'],
     'output_metrics_file_name': 'metrics_corr_preproc_ERA5_SST_1982_2019_3h_0.75_window_10d_delay_0d.npy',
 }
