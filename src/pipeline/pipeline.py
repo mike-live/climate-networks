@@ -22,21 +22,36 @@ def compute_metrics(config, corr_networks):
 
 def compute_metrics_by_parts(config):
     from tqdm import tqdm
-    from network_metrics.compute_metrics import parallel_compute_metrics
+    from network_metrics.compute_metrics import parallel_compute_metrics, load_data, get_available_mask
     import numpy as np
     metrics = []
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+
     for id_part in tqdm(range(config.correlations['num_parts'])):
         config.correlations['id_part'] = id_part
         corr_networks = make_corr_networks(config)
         corr_networks = np.moveaxis(corr_networks, -1, 0)
-        metrics += parallel_compute_metrics(config, corr_networks)
+        metrics += parallel_compute_metrics(config, corr_networks, available_mask)
     print(len(metrics))
     print(metrics[0])
     metrics_file_name = config.network_metrics['work_dir'] / config.network_metrics['output_metrics_file_name']
     np.save(metrics_file_name, metrics)
 
+
+
 def plot_2d_metrics(config):
-    pass
+    from corr_network import load_data, get_available_mask
+    from network_metrics import load_metrics, get_metric_names, get_metric
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+    metrics = load_metrics(config)
+    metric_names = get_metric_names(metrics)
+    for metric_name in metric_names:
+        metric = get_metric(metrics, metric_name, available_mask)
+        print(metric_name, metric.shape)
+    
+
 
 def parse_args():
     import argparse
