@@ -1,6 +1,6 @@
 from numba import float64, int32, int64, uint64, int8, jit
 import math
-from . import numba_config
+from helpers import numba_config
 
 @jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache)
 def merge_dis(x, y, xx, yy, l, r):
