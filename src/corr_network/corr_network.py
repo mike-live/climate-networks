@@ -22,18 +22,19 @@ def load_data(config):
     data_s = data[var_name].transpose((1, 2, 0))
     return data_s
 
-def exclude_not_available(config, data_s):
-    data = data_s.reshape(-1, data_s.shape[2])
-    if config.correlations['output_level'] >= 2:
-        print(data.shape)
+def get_available_data(data, mask):
+    return data[mask, :]
 
-    data = data[~np.any(np.isnan(data), axis = 1), :]
+def get_available_mask(data):
+    mask = ~np.any(np.isnan(data), axis = -1)
+    return mask
 
-    if config.correlations['output_level'] >= 2:
-        print(data.shape)
-
-    return data
-
+def expand_to_2d_by_mask(data, mask):
+    res = np.empty(mask.shape + (data.shape[-1], ))
+    res[:] = np.nan
+    res[mask, :] = data
+    return res
+           
 def calc_online_optimized(data, delay_time, window_size):
     # Third optimization
     tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
@@ -90,9 +91,7 @@ def get_parts(id_part, num_parts, nt):
     len_part += (id_part < nt % num_parts)
     return pos_part, len_part
 
-def make_correlation_matricies(config):
-    #delay_time = 28
-    #window_size = 60
+def make_correlation_matricies(config, mask = None):
     delay_time = config.correlations['delay_time']
     window_size = config.correlations['window_size']
     num_threads = config.correlations['num_threads']
@@ -101,7 +100,9 @@ def make_correlation_matricies(config):
         print('Window size:', window_size, 'Delay time:', delay_time)
         print('Num threads:', num_threads)
     data_s = load_data(config) # , latitutdes, longitudes, timeticks
-    data = exclude_not_available(config, data_s)
+    if mask is None:
+        mask = get_available_mask(data)
+    data = get_available_data(data, mask)
     if 'num_parts' in config.correlations:
         num_parts = config.correlations['num_parts']
         id_part = config.correlations['id_part']
@@ -120,3 +121,5 @@ def make_correlation_matricies(config):
     if config.correlations['need_save']:
         save_result(config, result)
     return result
+
+
