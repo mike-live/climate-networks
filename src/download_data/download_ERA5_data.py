@@ -4,6 +4,7 @@ import xarray as xr
 import read_ERA5_netCDF_files as read_nc
 import preprocessing_ERA5_data as preproc
 
+
 def download_raw_data(options, file_name):
     c = cdsapi.Client()
     
@@ -16,7 +17,7 @@ def download_raw_data(options, file_name):
         'time': ['0' + str(t) + ':00' if t < 10 else str(t) + ':00' for t in range(options['start_time'], options['end_time'] + 1, options['step_time'])],
         'area': [options['north'], options['west'], options['south'], options['east']],
         'format': 'netcdf',
-        'grid': '0.75/0.75',  
+        'grid': str(options['resolution']) + '/' + str(options['resolution']),  
     }
     
     c.retrieve(
@@ -26,20 +27,20 @@ def download_raw_data(options, file_name):
 
 
 def preprocessing_data(download_ERA5_options, resulting_cube, latitude, longitude, times):
-    pref = ''
     if download_ERA5_options['land_mask'] == True:
         print('Getting points on the sea only...', end = ' ')
-        pref += 'land_masked_'
         resulting_cube = preproc.get_resilting_cube_with_land_mask(resulting_cube, latitude, longitude, times)
-        file_name = download_ERA5_options['work_dir'] + 'resulting_cube_' + pref + download_ERA5_options['pref'] + '.npz'
+        file_name = download_ERA5_options['work_dir'] + download_ERA5_options['res_cube_land_masked_file_name']
         np.savez(file_name, resulting_cube)
         print('Done\n')
     
     if download_ERA5_options['preprocessing'] == True:
         print('Data preprocessing...', end = ' ')
-        pref += 'after_preproc_'
         resulting_cube = preproc.preprocessing(resulting_cube, times)
-        file_name = download_ERA5_options['work_dir'] + 'resulting_cube_' + pref + download_ERA5_options['pref'] + '.npz'
+        if download_ERA5_options['land_mask'] == True:
+            file_name = download_ERA5_options['work_dir'] + download_ERA5_options['res_cube_land_masked_and_preproc_file_name']
+        else:
+            file_name = download_ERA5_options['work_dir'] + download_ERA5_options['res_cube_preproc_file_name']
         np.savez(file_name, resulting_cube)
         print('Done\n')
     
@@ -74,15 +75,16 @@ def download_and_preprocessing_ERA5_data(download_ERA5_options):
     print("n_longitude = ", len(longitude))
     latitude = read_nc.get_latitude(dset_1, 'latitude')
     print("n_latitude = ", len(latitude))
-    np.savetxt(download_ERA5_options['work_dir'] + 'lon_' + download_ERA5_options['pref'] + '.txt', longitude, fmt = '%.2f')
-    np.savetxt(download_ERA5_options['work_dir'] + 'lat_' + download_ERA5_options['pref'] + '.txt', latitude, fmt = '%.2f')
+    np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['lon_file_name'], longitude, fmt = '%.2f')
+    np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['lat_file_name'], latitude, fmt = '%.2f')
     
-    times = read_nc.form_times_file(download_ERA5_options, download_ERA5_options['work_dir'] + 'times_' + download_ERA5_options['pref'] + '.txt')
+    times = read_nc.form_times_file(download_ERA5_options)
     print("n_times = ", len(times))
+    np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['times_file_name'], times)
     
     resulting_cube = read_nc.form_resulting_data_cube_from_parts_by_time(data_cube_1, data_cube_2)
     print('resulting_cube.shape = ', resulting_cube.shape)
-    np.savez(download_ERA5_options['work_dir'] + 'resulting_cube_' + download_ERA5_options['pref'] + '.npz', resulting_cube)
+    np.savez(download_ERA5_options['work_dir'] + download_ERA5_options['res_cube_file_name'], resulting_cube)
     print('Done\n')
     
     preprocessing_data(download_ERA5_options, resulting_cube, latitude, longitude, times)
