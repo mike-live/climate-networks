@@ -1,8 +1,8 @@
 import cdsapi
 import numpy as np
 import xarray as xr
-import read_ERA5_netCDF_files as read_nc
-import preprocessing_ERA5_data as preproc
+from . import read_ERA5_netCDF_files as read_nc
+from . import preprocessing_ERA5_data as preproc
 
 
 def download_raw_data(options, file_name):
@@ -29,7 +29,7 @@ def download_raw_data(options, file_name):
 def preprocessing_data(download_ERA5_options, resulting_cube, latitude, longitude, times):
     if download_ERA5_options['land_mask'] == True:
         print('Getting points on the sea only...', end = ' ')
-        resulting_cube = preproc.get_resilting_cube_with_land_mask(resulting_cube, latitude, longitude, times)
+        resulting_cube = preproc.get_resulting_cube_with_land_mask(resulting_cube, latitude, longitude, times)
         file_name = download_ERA5_options['work_dir'] + download_ERA5_options['res_cube_land_masked_file_name']
         np.savez(file_name, resulting_cube)
         print('Done\n')
@@ -78,9 +78,9 @@ def download_and_preprocessing_ERA5_data(download_ERA5_options):
     np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['lon_file_name'], longitude, fmt = '%.2f')
     np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['lat_file_name'], latitude, fmt = '%.2f')
     
-    times = read_nc.form_times_file(download_ERA5_options)
+    times = read_nc.form_times(download_ERA5_options)
     print("n_times = ", len(times))
-    np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['times_file_name'], times)
+    np.savetxt(download_ERA5_options['work_dir'] + download_ERA5_options['times_file_name'], times, fmt = '%s')
     
     resulting_cube = read_nc.form_resulting_data_cube_from_parts_by_time(data_cube_1, data_cube_2)
     print('resulting_cube.shape = ', resulting_cube.shape)
