@@ -3,7 +3,7 @@ import pandas as pd
 from global_land_mask import globe
 
 
-def get_resilting_cube_with_land_mask(resulting_cube, lat, lon, times):
+def get_resulting_cube_with_land_mask(resulting_cube, lat, lon, times):
 	# resulting_cube - 3D np.ndarray (time, lat, lon)
 	# lat -   1D np.ndarray (latitude)
 	# lon -   1D np.ndarray (longitude)
@@ -36,7 +36,7 @@ def preprocessing(resulting_cube, times):
         if day not in days_reviewed:
             days_reviewed.append(day)
             arr_mean = np.zeros((n_lat, n_lon))
-            inds_for_day = [ind for ind in range(0, len(times)) if times[ind].__contains__(day)]
+            inds_for_day = [ind for ind in range(0, len(times)) if day in times[ind]]
             for ind in inds_for_day:
                 arr_mean += resulting_cube[ind, :, :]
             arr_mean /= len(inds_for_day)
