@@ -26,7 +26,13 @@ network_metrics = {
 
 download_ERA5_options = {
     'work_dir': 'ERA5/ERA5_MSLP_1982_2019_3h_0.75/',
-    'pref': 'ERA5_MSLP_1982_2019_3h_0.75',
+    'lat_file_name': 'lat.txt',
+    'lon_file_name': 'lon.txt',
+    'times_file_name': 'times.txt',
+    'res_cube_file_name': 'resulting_cube.npz',
+    'res_cube_land_masked_file_name': 'resulting_cube_land_masked.npz',
+    'res_cube_preproc_file_name': 'resulting_cube_preproc.npz',
+    'res_cube_land_masked_and_preproc_file_name': 'resulting_cube_land_masked_and_preproc.npz',
     'variable': 'mean_sea_level_pressure',   #'mean_sea_level_pressure' or 'sea_surface_temperature'
     'name_var': 'msl',                       #'msl' or 'sst'
     'land_mask': True,
@@ -43,7 +49,8 @@ download_ERA5_options = {
     'north': 30.75, 
     'west': 49.5,
     'south': 4.5,
-    'east': 100.5,   
+    'east': 100.5,
+    'resolution': 0.75,
 }
 
 debug_level = 1
