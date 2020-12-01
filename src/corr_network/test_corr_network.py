@@ -1,5 +1,6 @@
 import os
 #os.environ["NUMBA_DISABLE_JIT"] = "1"
+#os.environ["NUMBA_DUMP_ANNOTATION"] = "1"
 
 import numpy as np
 #import scipy
@@ -13,18 +14,19 @@ import numpy as np
 #from scipy import special
 from time import time
 
-num_threads = 84
+num_threads = 1
 
-from parallel_maker import parallel_execute, make_args
-import kendaltau_corr
-import kendaltau_corr_online
-import kendaltau_corr_scipy
+from .parallel_maker import parallel_execute, make_args
+from . import kendaltau_corr
+from . import kendaltau_corr_online
+from . import kendaltau_corr_scipy
+from . import kendaltau_corr_online_bitset
 
 import numpy as np
 import os
 from pathlib2 import Path
 
-work_dir = Path(r'All2019_6h_0.75resolution')
+work_dir = Path(r'../../../data/SST/All2019_6h_0.75resolution')
 file_name = 'resulting_cube_All2019_6h_0.75resolution.npz'
 data = np.load(work_dir / file_name)
 data_s = data['arr_0'].transpose((1, 2, 0))
@@ -35,9 +37,9 @@ data = data[~np.any(np.isnan(data), axis = 1), :]
 print(data.shape)
 
 np.random.seed(42)
-n = 1
-m = 1
-nt = 90
+n = 10
+m = 10
+nt = 400
 #data_s = np.random.rand(n, m, nt).astype(np.float64)
 #data_s = np.random.randint(10, size = (n, m, nt)).astype(np.float64)
 
@@ -58,23 +60,30 @@ print(data.shape)
 
 #tau_corr = np.zeros((2, 2, 90), dtype = np.float64)
 #test(tau_corr, np.zeros((10, 10)), np.array(list(range(10))))
-delay_time = 28
-window_size = 60
-tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
-kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-print('res:', tau_corr.sum())
+delay_time = 70
+window_size = 130
 
-#tau_corr = np.zeros((2, 2, 90), dtype = np.float64)
+###############################################################################################################################################
+
+tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
+#kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+#print('sum1:', tau_corr.sum())
+
 ans = np.zeros((nm, nm, nt), dtype = np.float64)
 kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-print('ans = ', ans.sum())
-print('diff1 = ', (np.abs(ans - tau_corr)).max())
+print('ans1 = ', ans.sum())
+print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
 
 sans = kendaltau_corr_scipy.compute_tau_kendall_overall(data, delay_time = delay_time, window_size = window_size)
-print('sans = ', sans.sum())
+print('ans2 = ', sans.sum())
+print('diff2 = ', (np.abs(ans - sans)).max(), np.allclose(ans, sans))
+#print(data[:, 1])
 
-print('diff2 = ', (np.abs(ans - sans)).max())
-print(data[:, 1])
+kendaltau_corr_online_bitset.compute_tau_kendall_overall_online_bitset(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+print('sum3:', tau_corr.sum())
+print('diff3 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
+sdf
+###############################################################################################################################################
 
 
 #print(tau_corr[:, :, window_size:])
@@ -91,8 +100,11 @@ print(data[:, 1])
 #n = 50
 #m = 10
 #nt = data_all.shape[1]
+n = 10
+m = 10
+nt = 90
 
-data = data_all.astype(np.float64)#[:n*m, :nt].astype(np.float64)
+data = data_all.astype(np.float64)[:n*m, :nt].astype(np.float64)
 nm, nt = data.shape
 print(nm, nt)
 
@@ -103,6 +115,18 @@ ans = np.zeros((nm, nm, nt), dtype=data.dtype)
 parallel_execute(num_threads, kendaltau_corr.compute_tau_kendall_overall, make_args(num_threads, ans, data))
 en = time()
 print('Time ok:', en - be)'''
+
+###############################################################################################################################################
+
+be = time()
+result2 = np.zeros((nm, nm, nt), dtype=data.dtype)
+parallel_execute(num_threads, kendaltau_corr_online_bitset.compute_tau_kendall_overall_online_bitset, make_args(num_threads, result2, data))
+en = time()
+print('Time 2:', en - be)
+#np.save('corr_online_All2019_6h_resolution_0.75_window_15d_delay_7d.npy', result)
+print('res =', result2.sum())
+
+###############################################################################################################################################
 
 be = time()
 result = np.zeros((nm, nm, nt), dtype=data.dtype)
@@ -128,7 +152,11 @@ def get_ranks(x, y):
 
 en = time()
 print('Time fast:', en - be)
-np.save('corr_online_All2019_6h_resolution_0.75_window_15d_delay_7d.npy', result)
+#np.save('corr_online_All2019_6h_resolution_0.75_window_15d_delay_7d.npy', result)
 print('res =', result.sum())
 #print('diff =', np.max(np.abs(ans - result)))
 #print("Threading layer chosen: %s" % threading_layer())
+
+
+
+print('Allclose:', np.allclose(result2, result))

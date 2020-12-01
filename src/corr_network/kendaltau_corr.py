@@ -2,7 +2,7 @@ from numba import float64, int32, int64, uint64, int8, jit, prange, config, thre
 from numba.experimental import jitclass
 import math
 from .kendalltau_helpers import *
-from . import numba_config
+from helpers import numba_config
 import numpy as np
 
 
@@ -374,7 +374,7 @@ def compute_tau_kendall_overall(tau_corr, data, ids, window_size = 15 * 4, delay
     ytmp1 = np.zeros(window_size, dtype = data.dtype)
     ytmp2 = np.zeros(window_size, dtype = data.dtype)
     for i in ids:
-        print(ids[0], '<=', i, '<=', ids[-1], 'percent', (i - ids[0]) / (ids[-1] - ids[0] + 1))
+        #print(ids[0], '<=', i, '<=', ids[-1], 'percent', (i - ids[0]) / (ids[-1] - ids[0] + 1))
         for j in range(nm):
             for t in range(nt):
                 y1[t] = data[i, t]
