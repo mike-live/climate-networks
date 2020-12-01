@@ -4,11 +4,11 @@ from global_land_mask import globe
 
 
 def get_resulting_cube_with_land_mask(resulting_cube, lat, lon, times):
-	# resulting_cube - 3D np.ndarray (time, lat, lon)
-	# lat -   1D np.ndarray (latitude)
-	# lon -   1D np.ndarray (longitude)
-	# times - 1D np.ndarray (with 'yyyy.mm.dd hh:00:00')
-	
+    # resulting_cube - 3D np.ndarray (time, lat, lon)
+    # lat -   1D np.ndarray (latitude)
+    # lon -   1D np.ndarray (longitude)
+    # times - 1D np.ndarray (with 'yyyy.mm.dd hh:00:00')
+    
     n_time, n_lat, n_lon = resulting_cube.shape
     resulting_cube_land_masked = np.zeros((n_time, n_lat, n_lon))
     for k_lat in range(0, n_lat):
@@ -18,8 +18,8 @@ def get_resulting_cube_with_land_mask(resulting_cube, lat, lon, times):
             else:
                 resulting_cube_land_masked[:, k_lat, k_lon] = resulting_cube[:, k_lat, k_lon]
     return resulting_cube_land_masked
-	
-	
+
+
 def preprocessing(resulting_cube, times):
     # resulting_cube - 3D np.ndarray (time, lat, lon)
     # times - 1D np.ndarray (with 'yyyy.mm.dd hh:00:00')
