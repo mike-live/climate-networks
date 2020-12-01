@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+from datetime import timedelta, datetime
 
 
 def get_longitude(xarray_dset, name_coord):
@@ -26,48 +27,26 @@ def get_data_cube(xarray_dset, name_data_var):
     return data_cube
 
 
-def form_times_file(options, file_name):
+def form_times(options, file_name):
     # formation of a times list of the form "yyyy.mm.dd hh:00:00"
-    my_file = open(file_name, "w")
-    t = ['0' + str(t) + ':00:00' if t < 10 else str(t) + ':00:00' for t in range(options['start_time'], options['end_time'] + 1, options['step_time'])]
-    
     times = []
-
-    for year in range(options['start_year'], options['end_year'] + 1):
-        str_year = str(year)
     
-        for month in range(options['start_month'], options['end_month'] + 1):
-            if month < 10:
-                srt_month = '0' + str(month)
-            else:
-                srt_month = str(month)
-
-            if month in np.asarray([1, 3, 5, 7, 8, 10, 12]):
-                days = range(1, 32)
-            elif month in np.asarray([4, 6, 9, 11]):
-                days = range(1, 31)
-            elif (month == 2) and (((year % 4 == 0) and (year % 100 != 0)) or (year % 400 == 0)): # високосный год
-                days = range(1, 30)
-            else:
-                days = range(1, 29)
-            
-            for day in days:
-                if day < 10:
-                    str_day = '0' + str(day)
-                else:
-                    str_day = str(day)
-            
-                for time in t:
-                    my_file.write(str_year + '.' + srt_month + '.' + str_day + ' ' + time + '\n')
-                    times.append(str_year + '.' + srt_month + '.' + str_day + ' ' + time)
-    my_file.close()
+    start_date = datetime(options['start_year'], options['start_month'], options['start_day'], options['start_time'], 0, 0)
+    end_date = datetime(options['end_year'], options['end_month'], options['end_day'], options['end_time'], 0, 0)
+    
+    d = start_date
+    delta = timedelta(hours = options['step_time'])
+    while d <= end_date:
+        times.append(d.strftime("%Y.%m.%d %H:%M:%S"))
+        d += delta
+    
     return np.array(times)
  
 
 def form_resulting_data_cube_from_parts_by_time(*parts):
     # concatenate of xarray by time
-	# (since a large data set has to be uploaded as multiple netCDF files)
-	# resulting_cube - 3D np.ndarray (time, lat, lon)
+    # (since a large data set has to be uploaded as multiple netCDF files)
+    # resulting_cube - 3D np.ndarray (time, lat, lon)
     resulting_cube = parts[0]
     for k in range(1, len(parts)):
         resulting_cube = np.concatenate((resulting_cube, parts[k]), axis = 0)
