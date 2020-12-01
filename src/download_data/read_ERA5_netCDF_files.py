@@ -27,7 +27,7 @@ def get_data_cube(xarray_dset, name_data_var):
     return data_cube
 
 
-def form_times(options, file_name):
+def form_times(options):
     # formation of a times list of the form "yyyy.mm.dd hh:00:00"
     times = []
     
