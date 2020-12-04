@@ -334,7 +334,7 @@ class kendaltau_corr:
 
 @jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache)
 def compute_delayed_kendall_tau(corr, cur1, cur2, y1, y2, t, delay_time, window_size, alpha):
-    mtau = 0.0
+    mtau = -2
     best_shift = np.nan
     best_pv = np.nan
     for shift in range(-delay_time, delay_time + 1):
@@ -360,6 +360,8 @@ def compute_delayed_kendall_tau(corr, cur1, cur2, y1, y2, t, delay_time, window_
             best_shift = shift
             best_pv = pv
     #print(mtau)
+    if mtau == -2:
+        mtau = 0
     return mtau, best_shift, best_pv
 
 @jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache)

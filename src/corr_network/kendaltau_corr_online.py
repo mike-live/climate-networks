@@ -366,7 +366,7 @@ def compute_tau_kendall_overall_online(tau_corr, data, ids, window_size = 15 * 4
         #print(ids[0], '<=', i, '<=', ids[-1], 'percent', (i - ids[0]) / (ids[-1] - ids[0] + 1))
         for j in range(nm):
             for t in range(nt):
-                tau_corr[i, j, t] = 0
+                tau_corr[i, j, t] = -2
 
             for shift in range(-delay_time, delay_time + 1):
                 shift_1 = max(0, shift)
@@ -382,6 +382,10 @@ def compute_tau_kendall_overall_online(tau_corr, data, ids, window_size = 15 * 4
                         #best_pv = pv
                         tau_corr[i, j, t] = ktau
                     corr.move_window()
+            
+            for t in range(nt):
+                if tau_corr[i, j, t] == -2:
+                    tau_corr[i, j, t] = 0
 
     print(ids[0], '-', ids[-1], 'finish')
 
