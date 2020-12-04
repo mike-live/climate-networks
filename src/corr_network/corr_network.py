@@ -101,8 +101,8 @@ def make_correlation_matricies(config, mask = None):
         print('Num threads:', num_threads)
     data_s = load_data(config) # , latitutdes, longitudes, timeticks
     if mask is None:
-        mask = get_available_mask(data)
-    data = get_available_data(data, mask)
+        mask = get_available_mask(data_s)
+    data = get_available_data(data_s, mask)
     if 'num_parts' in config.correlations:
         num_parts = config.correlations['num_parts']
         id_part = config.correlations['id_part']
