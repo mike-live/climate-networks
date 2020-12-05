@@ -24,12 +24,13 @@ def compute_clustering_coefficient(a):
         for j in range(n):
             for k in range(j):
                 if j != i and i != k:
-                    M = a[i, j] * a[i, k]
                     D = Div[i, j] * Div[i, k]
-                    ro = (a[j, k] - M) / D
-                    up2abs = np.abs(M * ro)
-                    sumUp += up2abs
-                    sumDown += np.abs(M)
+                    if D > 1.e-5:
+                        M = a[i, j] * a[i, k]
+                        ro = (a[j, k] - M) / D
+                        up2abs = np.abs(M * ro)
+                        sumUp += up2abs
+                        sumDown += np.abs(M)
         if sumDown == 0:
             Ci[i] = np.nan
         else:
