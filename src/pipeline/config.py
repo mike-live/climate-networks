@@ -21,7 +21,7 @@ correlations = {
 network_metrics = {
     'num_threads': 84,
     'work_dir': correlations['work_dir'],
-    'output_metrics_file_name': 'metrics_corr_preproc_ERA5_SST_1982_2019_3h_0.75_window_10d_delay_0d.npy',
+    'output_metrics_file_name': 'metrics_corr_land_masked_ERA5_MSLP_1982_2019_3h_0.75_window_10d_delay_0d.npy',
 }
 
 download_ERA5_options = {
@@ -51,6 +51,18 @@ download_ERA5_options = {
     'south': 4.5,
     'east': 100.5,
     'resolution': 0.75,
+}
+
+map_plot_options = {
+    'work_dir': download_ERA5_options['work_dir'],
+    'metric_name': 'LCC',
+    'GCC_split': 'none',    # 'years', 'months', 'none'
+    'folder_name': 'pictures',
+    'start_time_plot': '2016.12.01 00:00:00',
+    'end_time_plot': '2016.12.31 00:00:00',
+    'step_time_in_hours': 24,
+    'dpi': 100,
+    'scaling_by_selected_data': True,
 }
 
 debug_level = 1
