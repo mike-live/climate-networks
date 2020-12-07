@@ -46,6 +46,7 @@ def plot_metrics(config):
     from corr_network import load_data, get_available_mask
     from network_metrics import load_metrics, get_metric_names, get_metric
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_metric_from_time
+    import os
     
     folder = config.map_plot_options['work_dir'] + config.map_plot_options['folder_name']
     if not os.path.isdir(folder):

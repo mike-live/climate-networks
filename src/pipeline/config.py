@@ -4,10 +4,10 @@ import os
 print(os.getcwd())
 
 correlations = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_SST_1982_2019_3h_0.75'),
-    'input_file_name': 'resulting_cube_after_preproc_ERA5_SST_1982_2019_3h_0.75.npz',
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'input_file_name': 'resulting_cube_land_masked_after_preproc_ERA5_MSLP_1982_2019_3h_0.75.npz',
     'input_var_name': 'arr_0',
-    'output_correlation_file_name': 'corr_online_preproc_ERA5_SST_1982_2019_3h_0.75_window_10d_delay_0d.npy',
+    'output_correlation_file_name': 'corr_online_preproc_ERA5_MSLP_1982_2019_3h_0.75_window_10d_delay_0d.npy',
 #    'output_correlation_var_name': 'result',
     'delay_time': 0,
     'window_size': 80,
@@ -58,7 +58,7 @@ map_plot_options = {
     'metric_name': 'LCC',
     'GCC_split': 'none',    # 'years', 'months', 'none'
     'folder_name': 'pictures',
-    'start_time_plot': '2016.12.01 00:00:00',
+    'start_time_plot': '2016.01.01 00:00:00',
     'end_time_plot': '2016.12.31 00:00:00',
     'step_time_in_hours': 24,
     'dpi': 100,
