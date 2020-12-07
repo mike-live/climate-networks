@@ -74,6 +74,12 @@ kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time 
 print('ans1 = ', ans.sum())
 print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
 
+
+ans = np.zeros((nm, nm, nt), dtype = np.float64)
+kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+print('ans1 = ', ans.sum())
+print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
+
 sans = kendaltau_corr_scipy.compute_tau_kendall_overall(data, delay_time = delay_time, window_size = window_size)
 print('ans2 = ', sans.sum())
 print('diff2 = ', (np.abs(ans - sans)).max(), np.allclose(ans, sans))

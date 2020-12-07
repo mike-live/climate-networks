@@ -214,7 +214,7 @@ def kendalltau(x, y, initial_lexsort=None, nan_policy='propagate', method='auto'
 
 
 def compute_delayed_kendall_tau(y1, y2, t, delay_time, window_size, alpha):
-    mtau = 0.0
+    mtau = -2
     best_shift = np.nan
     best_pv = np.nan
     for shift in range(-delay_time, delay_time + 1):
@@ -230,6 +230,8 @@ def compute_delayed_kendall_tau(y1, y2, t, delay_time, window_size, alpha):
             mtau = ktau
             best_shift = shift
             best_pv = pv
+    if mtau == -2:
+        mtau = 0
     #print(mtau)
     return mtau, best_shift, best_pv
 
