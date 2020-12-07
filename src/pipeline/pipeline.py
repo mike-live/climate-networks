@@ -42,19 +42,26 @@ def compute_metrics_by_parts(config):
     np.save(metrics_file_name, metrics)
 
 
-
-def plot_2d_metrics(config):
+def plot_metrics(config):
     from corr_network import load_data, get_available_mask
     from network_metrics import load_metrics, get_metric_names, get_metric
+    from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_metric_from_time
+    
+    folder = config.map_plot_options['work_dir'] + config.map_plot_options['folder_name']
+    if not os.path.isdir(folder):
+        os.mkdir(folder)
+    
     data = load_data(config)
     available_mask = get_available_mask(data)
     metrics = load_metrics(config)
     metric_names = get_metric_names(metrics)
-    for metric_name in metric_names:
+    for metric_name in [config.map_plot_options['metric_name']]:
         metric = get_metric(metrics, metric_name, available_mask)
         print(metric_name, metric.shape)
-    
-
+        if metric_name == 'LCC':
+            plot_2d_metric_on_map(metric, config, folder)
+        elif metric_name == 'GCC':
+            plot_metric_from_time(metric, config, folder)
 
 def parse_args():
     import argparse
@@ -79,6 +86,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def main():
     args = parse_args()
     config = load_config(config_name)
@@ -95,4 +103,4 @@ def main():
         compute_metrics_by_parts(config)
 
     if args.need_plot:
-        plot_2d_metrics(config)
+        plot_metrics(config)
