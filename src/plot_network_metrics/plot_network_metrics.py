@@ -94,7 +94,7 @@ def plot_2d_metric_on_map(metric, config, folder):
         plt.clf()
 
 
-def plot_metric_from_time(metric, config, folder):
+def plot_1d_metric_from_time(metric, config, folder):
     
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
     times = list(pd.read_csv(file_name, sep = '\n', header = None)[0])
@@ -105,7 +105,7 @@ def plot_metric_from_time(metric, config, folder):
     
     frame = pd.DataFrame({'time': times, 'metric': metric})
     
-    if config.map_plot_options['GCC_split'] == 'none':
+    if config.map_plot_options['time_split'] is None:
         plt.figure(figsize = (20, 4))
         plt.plot(frame['metric'])
         plt.title(config.map_plot_options['metric_name'], size = 20)
@@ -117,7 +117,7 @@ def plot_metric_from_time(metric, config, folder):
         plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
         plt.clf()
     
-    elif config.map_plot_options['GCC_split'] == 'years':
+    elif config.map_plot_options['time_split'] == 'years':
         years = utils.get_considered_years(config.map_plot_options)
         for year in years:
             year_frame = frame[frame['time'].str.contains(str(year))]
@@ -133,7 +133,7 @@ def plot_metric_from_time(metric, config, folder):
             plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
             plt.clf()
             
-    elif config.map_plot_options['GCC_split'] == 'months':
+    elif config.map_plot_options['time_split'] == 'months':
         start_date = datetime.strptime(config.map_plot_options['start_time_plot'], '%Y.%m.%d %H:%M:%S')
         end_date = datetime.strptime(config.map_plot_options['end_time_plot'], '%Y.%m.%d %H:%M:%S')
         d = start_date

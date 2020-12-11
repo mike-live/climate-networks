@@ -1,1 +1,1 @@
-__all__ = ['plot_network_metrics']
+__all__ = ['plot_network_metrics', 'utils']

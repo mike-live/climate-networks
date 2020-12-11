@@ -68,3 +68,16 @@ def get_xticks_for_GCC(times, param):
                     label.append(day)
                     break
         return inds, label
+
+
+def get_run_time_images_dir_name(config):
+    start_time_plot = datetime.strptime(config.map_plot_options['start_time_plot'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
+    end_time_plot = datetime.strptime(config.map_plot_options['end_time_plot'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
+    
+    if config.metric_dimension[config.map_plot_options['metric_name']] == '2D':
+        run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot + '_' + end_time_plot + '_' + \
+            str(config.map_plot_options['step_time_in_hours']) + 'h'
+    elif config.metric_dimension[config.map_plot_options['metric_name']] == '1D':
+        run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot[0:10] + '_' + end_time_plot[0:10] + '_' + \
+            str(config.map_plot_options['time_split'])
+    return run_time_dir_name

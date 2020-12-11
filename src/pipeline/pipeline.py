@@ -45,12 +45,13 @@ def compute_metrics_by_parts(config):
 def plot_metrics(config):
     from corr_network import load_data, get_available_mask
     from network_metrics import load_metrics, get_metric_names, get_metric
-    from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_metric_from_time
+    from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
+    from plot_network_metrics.utils import get_run_time_images_dir_name
     import os
     
-    folder = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir']
-    if not os.path.isdir(folder):
-        os.mkdir(folder)
+    images_dir = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir'] / get_run_time_images_dir_name(config)
+    if not os.path.isdir(images_dir):
+        os.mkdir(images_dir)
     
     data = load_data(config)
     available_mask = get_available_mask(data)
@@ -59,10 +60,11 @@ def plot_metrics(config):
     for metric_name in [config.map_plot_options['metric_name']]:
         metric = get_metric(metrics, metric_name, available_mask)
         print(metric_name, metric.shape)
-        if metric_name == 'LCC':
-            plot_2d_metric_on_map(metric, config, folder)
-        elif metric_name == 'GCC':
-            plot_metric_from_time(metric, config, folder)
+        if config.metric_dimension[metric_name] == '2D':        
+            plot_2d_metric_on_map(metric, config, images_dir)
+        elif config.metric_dimension[metric_name] == '1D':
+            plot_1d_metric_from_time(metric, config, images_dir)
+
 
 def parse_args():
     import argparse
