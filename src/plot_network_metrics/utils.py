@@ -78,6 +78,6 @@ def get_run_time_images_dir_name(config):
         run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot + '_' + end_time_plot + '_' + \
             str(config.map_plot_options['step_time_in_hours']) + 'h'
     elif config.metric_dimension[config.map_plot_options['metric_name']] == '1D':
-        run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot[0:10] + '_' + end_time_plot[0:10] + '_' + \
+        run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot + '_' + end_time_plot + '_' + \
             str(config.map_plot_options['time_split'])
     return run_time_dir_name
