@@ -40,11 +40,11 @@ def plot_map_area(ax, coordinates):
 
 def plot_2d_metric_on_map(metric, config, folder):
     
-    file_name = config.download_ERA5_options['work_dir'] + config.download_ERA5_options['times_file_name']
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
     times = np.asarray(pd.read_csv(file_name, sep = '\n', header = None)[0])
-    file_name = config.download_ERA5_options['work_dir'] + config.download_ERA5_options['lat_file_name']
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
     lat = np.asarray(pd.read_csv(file_name, header = None)[0])
-    file_name = config.download_ERA5_options['work_dir'] + config.download_ERA5_options['lon_file_name']
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
     lon = np.asarray(pd.read_csv(file_name, header = None)[0])
     
     data = xr.DataArray(metric, dims=('lat', 'lon', 'time'), coords = {'lat': lat, 'lon': lon, 'time': times})
@@ -89,14 +89,14 @@ def plot_2d_metric_on_map(metric, config, folder):
         ax.yaxis.set_major_formatter(lat_formatter)
         
         t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
-        plt.savefig(folder + '/' + config.map_plot_options['metric_name'] + '_' + \
-                    t_form + '.png', dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
+        file_name = folder / (config.map_plot_options['metric_name'] + '_' + t_form + '.png')
+        plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
         plt.clf()
 
 
 def plot_metric_from_time(metric, config, folder):
     
-    file_name = config.download_ERA5_options['work_dir'] + config.download_ERA5_options['times_file_name']
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
     times = list(pd.read_csv(file_name, sep = '\n', header = None)[0])
     
     ymin = round(float(np.nanmin(metric)), 2)
@@ -113,8 +113,8 @@ def plot_metric_from_time(metric, config, folder):
         plt.xticks(inds, inds_label, size = 20)
         plt.yticks(np.arange(ymin, ymax, step), size = 20)
         
-        plt.savefig(folder + '/' + config.map_plot_options['metric_name'] + '.png', \
-                    dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
+        file_name = folder / (config.map_plot_options['metric_name'] + '.png')
+        plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
         plt.clf()
     
     elif config.map_plot_options['GCC_split'] == 'years':
@@ -129,8 +129,8 @@ def plot_metric_from_time(metric, config, folder):
             plt.xticks(inds, inds_label, size = 20)
             plt.yticks(np.arange(ymin, ymax, step), size = 20)
             
-            plt.savefig(folder + '/' + config.map_plot_options['metric_name'] + '_' + str(year) + \
-                        '.png', dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
+            file_name = folder / (config.map_plot_options['metric_name'] + '_' + str(year) + '.png')
+            plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
             plt.clf()
             
     elif config.map_plot_options['GCC_split'] == 'months':
@@ -147,8 +147,8 @@ def plot_metric_from_time(metric, config, folder):
             plt.xticks(inds, inds_label, size = 20)
             plt.yticks(np.arange(ymin, ymax, step), size = 20)
             
-            plt.savefig(folder + '/' + config.map_plot_options['metric_name'] + '_' + d.strftime("%b_%Y") + \
-                        '.png', dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
+            file_name = folder / (config.map_plot_options['metric_name'] + '_' + d.strftime("%b_%Y") + '.png')
+            plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
             plt.clf()
             
             d += relativedelta(months = 1)

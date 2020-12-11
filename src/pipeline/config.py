@@ -25,7 +25,7 @@ network_metrics = {
 }
 
 download_ERA5_options = {
-    'work_dir': 'ERA5/ERA5_MSLP_1982_2019_3h_0.75/',
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
     'lat_file_name': 'lat.txt',
     'lon_file_name': 'lon.txt',
     'times_file_name': 'times.txt',
@@ -55,11 +55,11 @@ download_ERA5_options = {
 
 map_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
-    'metric_name': 'LCC',
-    'GCC_split': 'none',    # 'years', 'months', 'none'
-    'folder_name': 'pictures',
+    'metric_name': 'GCC',
+    'GCC_split': 'months',    # 'years', 'months', 'none'
+    'images_dir': 'images',
     'start_time_plot': '2016.01.01 00:00:00',
-    'end_time_plot': '2016.12.31 00:00:00',
+    'end_time_plot': '2017.01.31 00:00:00',
     'step_time_in_hours': 24,
     'dpi': 100,
     'scaling_by_selected_data': True,

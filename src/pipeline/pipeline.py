@@ -48,7 +48,7 @@ def plot_metrics(config):
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_metric_from_time
     import os
     
-    folder = config.map_plot_options['work_dir'] + config.map_plot_options['folder_name']
+    folder = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir']
     if not os.path.isdir(folder):
         os.mkdir(folder)
     
