@@ -3,10 +3,11 @@ import pandas as pd
 import xarray as xr
 import cv2
 import matplotlib
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt, rcParams
+import matplotlib.dates as mdates
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter, LatitudeLocator
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 from . import utils
@@ -68,7 +69,7 @@ def plot_2d_metric_on_map(metric, config, folder):
     cmap = get_cmap()
     
     for t in considered_times:
-        fig = plt.figure(figsize = [10,10])
+        fig = plt.figure(figsize = (10, 10))
         ax = plt.axes(projection = ccrs.PlateCarree(central_longitude = central_longitude))
         plot_map_area(ax, [west, east, south, north])
 
@@ -91,64 +92,96 @@ def plot_2d_metric_on_map(metric, config, folder):
         t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
         file_name = folder / (config.map_plot_options['metric_name'] + '_' + t_form + '.png')
         plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
-        plt.clf()
+        plt.close()
 
 
 def plot_1d_metric_from_time(metric, config, folder):
     
+    rcParams['font.size'] = 18
+    rcParams['axes.titlesize'] = 'medium'
+    
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
     times = list(pd.read_csv(file_name, sep = '\n', header = None)[0])
-    
+    frame = pd.DataFrame({'time': times, 'metric': metric})
     ymin = round(float(np.nanmin(metric)), 2)
     ymax = round(float(np.nanmax(metric)), 2)
     step = round((ymax - ymin) / 3, 2)
     
-    frame = pd.DataFrame({'time': times, 'metric': metric})
-    
     if config.map_plot_options['time_split'] is None:
-        plt.figure(figsize = (20, 4))
-        plt.plot(frame['metric'])
-        plt.title(config.map_plot_options['metric_name'], size = 20)
-        inds, inds_label = utils.get_xticks_for_GCC(times, 'none')
-        plt.xticks(inds, inds_label, size = 20)
-        plt.yticks(np.arange(ymin, ymax, step), size = 20)
+        considered_times = utils.get_considered_times(config.map_plot_options)
+        date_frame = frame[frame['time'].isin(considered_times)]
+        date_frame.index = range(0, len(date_frame))
+        dates = [datetime.strptime(d,'%Y.%m.%d %H:%M:%S').date() for d in date_frame['time']]
         
+        plt.figure(figsize = (20, 4))
+        
+        plt.plot(dates, date_frame['metric'], 'b')
+        plt.title(config.map_plot_options['start_time_plot'] + ' - ' + config.map_plot_options['end_time_plot'])
+        
+        plt.xlabel('date')
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+        plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+        plt.gca().set_xlim(dates[0], dates[-1])
+        
+        plt.ylabel(config.map_plot_options['metric_name'])
+        plt.gca().set_yticks(np.arange(ymin, ymax, step))
+        plt.gca().set_ylim(ymin - step*0.1, ymax)
+    
         file_name = folder / (config.map_plot_options['metric_name'] + '.png')
         plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
-        plt.clf()
+        plt.close()
     
     elif config.map_plot_options['time_split'] == 'years':
         years = utils.get_considered_years(config.map_plot_options)
         for year in years:
             year_frame = frame[frame['time'].str.contains(str(year))]
             year_frame.index = range(0, len(year_frame))
+            dates = [datetime.strptime(d,'%Y.%m.%d %H:%M:%S').date() for d in year_frame['time']]
+
             plt.figure(figsize = (20, 4))
-            plt.plot(year_frame['metric'])
-            plt.title(config.map_plot_options['metric_name'] + ', ' + str(year), size = 20)
-            inds, inds_label = utils.get_xticks_for_GCC(list(year_frame['time']), 'years')
-            plt.xticks(inds, inds_label, size = 20)
-            plt.yticks(np.arange(ymin, ymax, step), size = 20)
+            
+            plt.plot(dates, year_frame['metric'], 'b')
+            plt.title(str(year))
+            
+            plt.xlabel('date')
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+            plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+            plt.gca().set_xlim(dates[0], dates[-1])
+            
+            plt.ylabel(config.map_plot_options['metric_name'])
+            plt.gca().set_yticks(np.arange(ymin, ymax, step))
+            plt.gca().set_ylim(ymin - step*0.1, ymax)
             
             file_name = folder / (config.map_plot_options['metric_name'] + '_' + str(year) + '.png')
             plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
-            plt.clf()
+            plt.close()
             
     elif config.map_plot_options['time_split'] == 'months':
         start_date = datetime.strptime(config.map_plot_options['start_time_plot'], '%Y.%m.%d %H:%M:%S')
         end_date = datetime.strptime(config.map_plot_options['end_time_plot'], '%Y.%m.%d %H:%M:%S')
+        
         d = start_date
         while d <= end_date:
             month_frame = frame[frame['time'].str.contains(d.strftime("%Y.%m."))]
             month_frame.index = range(0, len(month_frame))
-            plt.figure(figsize = (20, 4))
-            plt.plot(month_frame['metric'])
-            plt.title(config.map_plot_options['metric_name'] + ', ' + d.strftime("%b %Y"), size = 20)
-            inds, inds_label = utils.get_xticks_for_GCC(list(month_frame['time']), 'months')
-            plt.xticks(inds, inds_label, size = 20)
-            plt.yticks(np.arange(ymin, ymax, step), size = 20)
+            dates = [datetime.strptime(d,'%Y.%m.%d %H:%M:%S').date() for d in month_frame['time']]
             
-            file_name = folder / (config.map_plot_options['metric_name'] + '_' + d.strftime("%b_%Y") + '.png')
+            plt.figure(figsize = (20, 4))
+            
+            plt.plot(dates, month_frame['metric'], 'b')
+            plt.title(d.strftime("%Y-%b"))
+
+            plt.xlabel('date')
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+            plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+            plt.gca().set_xlim(dates[0], dates[-1])
+            
+            plt.ylabel(config.map_plot_options['metric_name'])
+            plt.gca().set_yticks(np.arange(ymin, ymax, step))
+            plt.gca().set_ylim(ymin - step*0.1, ymax)
+            
+            file_name = folder / (config.map_plot_options['metric_name'] + '_' + d.strftime("%Y-%m") + '.png')
             plt.savefig(file_name, dpi = config.map_plot_options['dpi'], bbox_inches = 'tight')
-            plt.clf()
+            plt.close()
             
             d += relativedelta(months = 1)
