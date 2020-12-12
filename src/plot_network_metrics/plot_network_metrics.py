@@ -107,7 +107,7 @@ def plot_1d_metric_from_time(metric, config, folder):
     ymax = round(float(np.nanmax(metric)), 2)
     step = round((ymax - ymin) / 3, 2)
     
-    if config.map_plot_options['time_split'] is None:
+    if config.map_plot_options['time_split'] == None:
         considered_times = utils.get_considered_times(config.map_plot_options)
         date_frame = frame[frame['time'].isin(considered_times)]
         date_frame.index = range(0, len(date_frame))
