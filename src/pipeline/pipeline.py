@@ -49,7 +49,10 @@ def plot_metrics(config):
     from plot_network_metrics.utils import get_run_time_images_dir_name
     import os
     
-    images_dir = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir'] / get_run_time_images_dir_name(config)
+    images_dir = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir']
+    if not os.path.isdir(images_dir):
+        os.mkdir(images_dir)
+    images_dir = images_dir / get_run_time_images_dir_name(config)
     if not os.path.isdir(images_dir):
         os.mkdir(images_dir)
     
