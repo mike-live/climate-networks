@@ -37,39 +37,6 @@ def get_xyticks_for_map(west, east, south, north):
     return xticks, yticks
 
 
-def get_xticks_for_GCC(times, param):
-    if param == 'none':
-        years = range(int(times[0][0:4]), int(times[len(times)-1][0:4]) + 1, 4)
-        inds = []
-        for year in years:
-            for t in times:
-                if str(year) in t:
-                    inds.append(times.index(t))
-                    break
-        return inds, years
-    
-    elif param == 'years':
-        inds = []
-        for moth in range(1, 13):
-            for t in times:
-                if t[5:7] == str(moth).rjust(2, '0'):
-                    inds.append(times.index(t))
-                    break
-        return inds, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
-    elif param == 'months':
-        inds = []
-        label = []
-        for day in range(1, 32):
-            day = str(day).rjust(2, '0')
-            for t in times:
-                if t[8:10] == day:
-                    inds.append(times.index(t))
-                    label.append(day)
-                    break
-        return inds, label
-
-
 def get_run_time_images_dir_name(config):
     start_time_plot = datetime.strptime(config.map_plot_options['start_time_plot'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
     end_time_plot = datetime.strptime(config.map_plot_options['end_time_plot'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
@@ -77,7 +44,16 @@ def get_run_time_images_dir_name(config):
     if config.metric_dimension[config.map_plot_options['metric_name']] == '2D':
         run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot + '_' + end_time_plot + '_' + \
             str(config.map_plot_options['step_time_in_hours']) + 'h'
+    
     elif config.metric_dimension[config.map_plot_options['metric_name']] == '1D':
+        if config.map_plot_options['time_split'] == 'years':
+            start_time_plot = start_time_plot[0:4]
+            end_time_plot = end_time_plot[0:4]
+        elif config.map_plot_options['time_split'] == 'months':
+            start_time_plot = start_time_plot[0:7]
+            end_time_plot = end_time_plot[0:7]
+            
         run_time_dir_name = config.map_plot_options['metric_name'] + '_' + start_time_plot + '_' + end_time_plot + '_' + \
             str(config.map_plot_options['time_split'])
+            
     return run_time_dir_name
