@@ -68,9 +68,9 @@ def download_and_preprocessing_ERA5_data(download_ERA5_options):
     
     # npz cube formation
     print('Forming the resulting data cube...')
-    dset_1 = xr.open_dataset(file_name_1st)
+    dset_1 = xr.open_dataset(str(file_name_1st))
     data_cube_1 = read_nc.get_data_cube(dset_1, download_ERA5_options['name_var'])
-    dset_2 = xr.open_dataset(file_name_2nd)
+    dset_2 = xr.open_dataset(str(file_name_2nd))
     data_cube_2 = read_nc.get_data_cube(dset_2, download_ERA5_options['name_var'])
 
     longitude = read_nc.get_longitude(dset_1, 'longitude')
