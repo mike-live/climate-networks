@@ -9,7 +9,7 @@ def compute_degrees(a):
     return degree
 
 def compute_eigenvector_centrality(a):
-    v, w = scipy.linalg.eigh(a, subset_by_index = [len(a) - 1, len(a) - 1], driver = 'evx')
+    v, w = scipy.linalg.eigh(a, subset_by_index = [len(a) - 1, len(a) - 1], driver = 'evr')
     return w
 
 @jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache, error_model="numpy")
