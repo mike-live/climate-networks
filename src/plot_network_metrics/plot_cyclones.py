@@ -51,6 +51,6 @@ def plot_cyclones_on_map(date, ax, options):
         for number in unique_serial_numbers:
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             lons, lats = get_lat_lon_for_cyclone(df)
-            ax.scatter(lons, lats, c = 'k', s = 50, alpha = 0.01, transform = ccrs.PlateCarree())
+            ax.scatter(lons, lats, c = 'k', s = 50, alpha = 0.2, transform = ccrs.PlateCarree())
 
 
