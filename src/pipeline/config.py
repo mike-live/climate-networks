@@ -55,14 +55,16 @@ download_ERA5_options = {
 
 map_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
-    'metric_name': 'GCC',
+    'metric_name': 'LCC',
     'time_split': None,    # 'years', 'months', None
     'images_dir': 'images',
-    'start_time_plot': '2016.01.01 00:00:00',
-    'end_time_plot': '2017.01.05 00:00:00',
+    'start_time_plot': '2018.10.13 00:00:00',
+    'end_time_plot': '2018.10.14 00:00:00',
     'step_time_in_hours': 24,
     'dpi': 100,
     'scaling_by_selected_data': True,
+    'plot_cyclones': True,
+    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
 metric_dimension = {
