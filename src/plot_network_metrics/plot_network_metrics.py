@@ -55,8 +55,8 @@ def plot_2d_metric_on_map(metric, config, folder):
     if config.map_plot_options['scaling_by_selected_data'] == True:
         data = data.sel(time = considered_times)
     
-    vmin = float(data.min(skipna = True))
-    vmax = float(data.max(skipna = True))
+    vmin = float(data.min(dim = ['lat', 'lon', 'time'], skipna = True))
+    vmax = float(data.max(dim = ['lat', 'lon', 'time'], skipna = True))
     
     west = config.download_ERA5_options['west']
     east = config.download_ERA5_options['east']
