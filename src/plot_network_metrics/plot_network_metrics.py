@@ -11,6 +11,7 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 from . import utils
+from . import plot_cyclones
 
 
 def get_cmap():
@@ -88,6 +89,9 @@ def plot_2d_metric_on_map(metric, config, folder):
         lat_formatter = LatitudeFormatter()
         ax.xaxis.set_major_formatter(lon_formatter)
         ax.yaxis.set_major_formatter(lat_formatter)
+        
+        if config.map_plot_options['plot_cyclones']:
+            plot_cyclones.plot_cyclones_on_map(t, ax, config.map_plot_options)
         
         t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
         file_name = folder / (config.map_plot_options['metric_name'] + '_' + t_form + '.png')
