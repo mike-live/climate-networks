@@ -4,7 +4,7 @@ from numba import jit
 from helpers import numba_config
 
 @jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache, error_model="numpy")
-def compute_clustering_coefficient(a):
+def compute_weighted_clustering_coefficient(a):
     (n, m) = a.shape
 
     Ci = np.empty(n)
@@ -53,3 +53,23 @@ def compute_clustering_coefficient(a):
     Cglob = np.mean(Ci)
     return Ci, Cglob
 
+@jit(nopython = numba_config.nopython, nogil = numba_config.nogil, cache = numba_config.cache, error_model="numpy")
+def compute_clustering_coefficient(a):
+    (n, m) = a.shape
+
+    sum_numerator = 0
+    sum_denominator = 0
+    C = np.empty(n)
+    for i in range(n):
+        d = a[i].sum()
+        if d <= 1:
+            C[i] = np.nan
+        else:
+            numerator = np.sum(a * np.outer(a[i], a[i]))
+            denominator = d * (d - 1)
+            C[i] = numerator / denominator
+            sum_numerator += numerator
+            sum_denominator += denominator
+        
+    GCC = sum_numerator / sum_denominator
+    return C, GCC

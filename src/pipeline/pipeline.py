@@ -34,7 +34,6 @@ def compute_metrics_by_parts(config):
         config.correlations['id_part'] = id_part
         corr_networks = make_corr_networks(config, available_mask)
         corr_networks = np.moveaxis(corr_networks, -1, 0)
-        metrics += parallel_compute_metrics(config, corr_networks, available_mask)
         metrics += parallel_compute_metrics(config, corr_networks)
     print(len(metrics))
     print(metrics[0])
