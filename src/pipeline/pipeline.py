@@ -45,27 +45,41 @@ def plot_metrics(config):
     from corr_network import load_data, get_available_mask
     from network_metrics import load_metrics, get_metric_names, get_metric
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
-    from plot_network_metrics.utils import get_run_time_images_dir_name
-    import os
-    
-    images_dir = config.map_plot_options['work_dir'] / config.map_plot_options['images_dir']
-    if not os.path.isdir(images_dir):
-        os.mkdir(images_dir)
-    images_dir = images_dir / get_run_time_images_dir_name(config)
-    if not os.path.isdir(images_dir):
-        os.mkdir(images_dir)
-    
+    from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, get_considered_times, get_considered_times_for_cyclone
+    from plot_network_metrics.plot_cyclones import get_cyclones, update_config_for_plot_cyclone
+    from tqdm import tqdm
+
     data = load_data(config)
     available_mask = get_available_mask(data)
     metrics = load_metrics(config)
-    metric_names = get_metric_names(metrics)
-    for metric_name in [config.map_plot_options['metric_name']]:
-        metric = get_metric(metrics, metric_name, available_mask)
-        print(metric_name, metric.shape)
-        if config.metric_dimension[metric_name] == '2D':        
-            plot_2d_metric_on_map(metric, config, images_dir)
-        elif config.metric_dimension[metric_name] == '1D':
-            plot_1d_metric_from_time(metric, config, images_dir)
+
+    if config.plotting_mode['metrics']:
+        considered_times = get_considered_times(config.metrics_plot_options)
+        for metric_name in config.metrics_plot_options['metric_names']:
+            config.metrics_plot_options['metric_name'] = metric_name
+            metric_dir = create_dir(config)
+            metric = get_metric(metrics, metric_name, available_mask)
+            print(metric_name, metric.shape)
+            if config.metric_dimension[metric_name] == '2D':
+                plot_2d_metric_on_map(metric, considered_times, config, metric_dir)
+            elif config.metric_dimension[metric_name] == '1D':
+                plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
+
+    elif config.plotting_mode['metrics'] == False and config.plotting_mode['cyclones'] == True:
+        cyclones = get_cyclones(config)
+        cyclones_dir = create_dir(config)
+        for cyclone in tqdm(cyclones):
+            print('\ncyclone:', cyclone)
+            considered_times = get_considered_times_for_cyclone(cyclone, config)
+            update_config_for_plot_cyclone(config, cyclone)
+            for metric_name in config.metrics_plot_options['metric_names']:
+                config.metrics_plot_options['metric_name'] = metric_name
+                cyclone_metric_dir = create_cyclone_metric_dir(config, cyclone, cyclones_dir)
+                metric = get_metric(metrics, metric_name, available_mask)
+                if config.metric_dimension[metric_name] == '2D':
+                    plot_2d_metric_on_map(metric, considered_times, config, cyclone_metric_dir, cyclone)
+                elif config.metric_dimension[metric_name] == '1D':
+                    plot_1d_metric_from_time(metric, considered_times, config, cyclone_metric_dir)
 
 
 def parse_args():
