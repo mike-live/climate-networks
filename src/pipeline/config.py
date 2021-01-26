@@ -53,17 +53,31 @@ download_ERA5_options = {
     'resolution': 0.75,
 }
 
-map_plot_options = {
+plotting_mode = {
+    'metrics': False,
+    'cyclones': True,
+}
+
+metrics_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'metric_name': 'LCC',
+    'metric_names': ['LCC', 'GCC'],
     'time_split': None,    # 'years', 'months', None
     'images_dir': 'images',
-    'start_time_plot': '2018.10.13 00:00:00',
-    'end_time_plot': '2018.10.14 00:00:00',
+    'start_time': '2016.12.01 21:00:00',
+    'end_time': '2016.12.31 00:00:00',
     'step_time_in_hours': 24,
     'dpi': 100,
-    'scaling_by_selected_data': True,
+    'scaling_by_selected_data': False,
     'plot_cyclones': True,
+    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
+}
+
+cyclones_plot_options = {
+    'work_dir': download_ERA5_options['work_dir'],
+    'images_dir': 'cyclones',
+    'start_time': '1998.06.01 00:00:00',
+    'end_time': '1998.08.21 00:00:00',
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
