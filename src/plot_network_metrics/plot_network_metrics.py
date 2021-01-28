@@ -83,7 +83,7 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone='
         cb = fig.colorbar(cf, shrink=0.46)
         cb.ax.set_title(config.metrics_plot_options['metric_name'])
 
-        ax.set_title(t)
+        ax.set_title(datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M:%S'))
         ax.set_xticks(xticks, crs=ccrs.PlateCarree())
         ax.set_yticks(yticks, crs=ccrs.PlateCarree())
         lon_formatter = LongitudeFormatter(zero_direction_label=True)
@@ -92,9 +92,9 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone='
         ax.yaxis.set_major_formatter(lat_formatter)
         
         if config.metrics_plot_options['plot_cyclones']:
-            plot_cyclones.plot_cyclones_on_map(t, ax, config.metrics_plot_options, cyclone, south)
+            plot_cyclones.plot_cyclones_on_map(t, ax, config.metrics_plot_options, cyclone)
         
-        t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
+        t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d-%b-%Y-%H-%M-%S')
         file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + t_form + '.png')
         plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
         plt.close()
