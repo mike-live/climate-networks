@@ -33,13 +33,15 @@ def get_current_index(df, date):
 
 
 def get_colors_for_cyclone(df, cyclone, date, number):
-    alpha = 0.2
+    alpha = 0
     colors = [[0, 0, 0, alpha]] * len(df)   # black
+    edgecolors = [[0, 0, 0]] * len(df)
     if cyclone != '':
         if cyclone['number'] == number:
             current_index = get_current_index(df, date)
-            colors[current_index] = [1, 0, 0, 1]   # red
-    return colors
+            colors[current_index] = [1, 0, 0, 0]   # red
+            edgecolors[current_index] = [1, 0, 0]
+    return colors, edgecolors
 
 
 def get_sizes_for_cyclone(df):
@@ -71,10 +73,10 @@ def plot_cyclones_on_map(date, ax, options, cyclone, south):
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             df.index = range(0, len(df))
             lons, lats = get_lat_lon_for_cyclone(df)
-            colors = get_colors_for_cyclone(df, cyclone, date, number)
+            colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number)
             sizes = get_sizes_for_cyclone(df)
             ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
-            ax.scatter(lons, lats, c=colors, s=sizes, transform=ccrs.PlateCarree())
+            ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
             add_cyclone_info(ax, df, lons, lats, south)
 
 
