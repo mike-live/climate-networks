@@ -103,7 +103,7 @@ def get_run_time_images_dir_name_for_cyclones(config):
 
 
 def create_cyclone_metric_dir(config, cyclone, images_dir):
-    dir_name = 'cyclone_' + str(cyclone['number']) + '_'
+    dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_'
     dir_name += datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' + \
                datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
     cyclone_dir = images_dir / dir_name
