@@ -67,7 +67,7 @@ metrics_plot_options = {
     'start_time': '2016.12.01 21:00:00',
     'end_time': '2016.12.31 00:00:00',
     'step_time_in_hours': 24,
-    'dpi': 100,
+    'dpi': 200,
     'scaling_by_selected_data': False,
     'plot_cyclones': True,
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
