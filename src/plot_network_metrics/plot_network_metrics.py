@@ -120,12 +120,14 @@ def plot_1d_metric_from_time(metric, considered_times, config, directory):
         plt.figure(figsize=(20, 4))
         
         plt.plot(dates, date_frame['metric'], 'b')
-        plt.title(config.metrics_plot_options['start_time'] + ' - ' + config.metrics_plot_options['end_time'])
+        start_t = datetime.strptime(config.metrics_plot_options['start_time'], '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
+        end_t = datetime.strptime(config.metrics_plot_options['end_time'], '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
+        plt.title(start_t + ' - ' + end_t)
         
         plt.xlabel('date')
 
         if config.plotting_mode['cyclones'] == True and config.plotting_mode['metrics'] == False:
-            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m %H:%M'))
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d %b %H:%M'))
             if len(dates) <= 20:
                 plt.gca().xaxis.set_major_locator(mtick.FixedLocator(dates))
             else:
@@ -140,7 +142,7 @@ def plot_1d_metric_from_time(metric, considered_times, config, directory):
                 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
                 plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
             else:
-                plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+                plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
                 plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
         plt.gca().set_xlim(dates[0], dates[-1])
         
@@ -166,7 +168,7 @@ def plot_1d_metric_from_time(metric, considered_times, config, directory):
             
             plt.xlabel('date')
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-            plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+            plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
             plt.gca().set_xlim(dates[0], dates[-1])
             
             plt.ylabel(config.metrics_plot_options['metric_name'])
@@ -190,18 +192,18 @@ def plot_1d_metric_from_time(metric, considered_times, config, directory):
             plt.figure(figsize=(20, 4))
             
             plt.plot(dates, month_frame['metric'], 'b')
-            plt.title(d.strftime("%Y-%b"))
+            plt.title(d.strftime("%b %Y"))
 
             plt.xlabel('date')
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-            plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+            plt.gca().xaxis.set_major_locator(mdates.DayLocator())
             plt.gca().set_xlim(dates[0], dates[-1])
             
             plt.ylabel(config.metrics_plot_options['metric_name'])
             plt.gca().set_yticks(np.arange(ymin, ymax, step))
             plt.gca().set_ylim(ymin - step*0.1, ymax)
             
-            file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + d.strftime("%Y-%m") + '.png')
+            file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + d.strftime("%b-%Y") + '.png')
             plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
             plt.close()
             
