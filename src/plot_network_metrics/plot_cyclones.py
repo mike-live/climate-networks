@@ -51,19 +51,18 @@ def get_sizes_for_cyclone(df):
     return sizes
 
 
-def add_cyclone_info(ax, df, lons, lats, south):
+def add_cyclone_info(ax, df, lons, lats):
     text = str(list(set(df['Name']))[0]) + ' '
     text += datetime.strptime(np.array(df['Date (DD/MM/YYYY)'])[0], '%d/%m/%Y').strftime('%d %b') + ' - '
     text += datetime.strptime(np.array(df['Date (DD/MM/YYYY)'])[-1], '%d/%m/%Y').strftime('%d %b')
     center = (min(lons) + max(lons)) * 0.5
-    h = min(lats) - 1
-    if h - south < 2:
-        h = max(lats) + 1
+    h = max(lats) + 3
+    props = dict(facecolor='white', edgecolor='none', alpha=0.5)
     ax.text(center, h, text, horizontalalignment='center',
-            verticalalignment='top', transform=ccrs.PlateCarree())
+            verticalalignment='top', bbox=props, transform=ccrs.PlateCarree())
 
 
-def plot_cyclones_on_map(date, ax, options, cyclone, south):
+def plot_cyclones_on_map(date, ax, options, cyclone):
     sheet_name = date[0:4]
     frame = read_cyclones_file(options, sheet_name)
     sub_frame = get_cyclones_for_special_date(frame, date)
@@ -77,7 +76,7 @@ def plot_cyclones_on_map(date, ax, options, cyclone, south):
             sizes = get_sizes_for_cyclone(df)
             ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
             ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
-            add_cyclone_info(ax, df, lons, lats, south)
+            add_cyclone_info(ax, df, lons, lats)
 
 
 def get_current_cyclone_dict(frame):
