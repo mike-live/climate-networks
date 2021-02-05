@@ -64,11 +64,11 @@ metrics_plot_options = {
     'metric_names': ['LCC', 'GCC'],
     'time_split': None,    # 'years', 'months', None
     'images_dir': 'images',
-    'start_time': '2016.12.01 21:00:00',
-    'end_time': '2016.12.31 00:00:00',
+    'start_time': '2004.09.29 00:00:00',
+    'end_time': '2004.10.05 00:00:00',
     'step_time_in_hours': 24,
     'dpi': 200,
-    'scaling_by_selected_data': False,
+    'scaling_by_selected_data': True,
     'plot_cyclones': True,
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
@@ -76,8 +76,9 @@ metrics_plot_options = {
 cyclones_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'images_dir': 'cyclones',
-    'start_time': '1998.06.01 00:00:00',
-    'end_time': '1998.08.21 00:00:00',
+    'start_time': '2004.09.20 00:00:00',
+    'end_time': '2004.10.20 00:00:00',
+    'n_3h_intervals_before_after': 16,
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
