@@ -43,9 +43,10 @@ def compute_metrics_by_parts(config):
 
 def plot_metrics(config):
     from corr_network import load_data, get_available_mask
-    from network_metrics import load_metrics, get_metric_names, get_metric
+    from network_metrics import load_metrics, get_metric
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
-    from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, get_considered_times, get_considered_times_for_cyclone
+    from plot_network_metrics.utils import create_dir, \
+        create_cyclone_metric_dir, get_considered_times, get_considered_times_for_cyclone
     from plot_network_metrics.plot_cyclones import get_cyclones, update_config_for_plot_cyclone
     from tqdm import tqdm
 
@@ -54,7 +55,7 @@ def plot_metrics(config):
     metrics = load_metrics(config)
 
     if config.plotting_mode['metrics']:
-        considered_times = get_considered_times(config.metrics_plot_options)
+        considered_times = get_considered_times(config)
         for metric_name in config.metrics_plot_options['metric_names']:
             config.metrics_plot_options['metric_name'] = metric_name
             metric_dir = create_dir(config)
@@ -65,7 +66,7 @@ def plot_metrics(config):
             elif config.metric_dimension[metric_name] == '1D':
                 plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
 
-    elif config.plotting_mode['metrics'] == False and config.plotting_mode['cyclones'] == True:
+    elif config.plotting_mode['cyclones'] and config.plotting_mode['metrics'] == False:
         cyclones = get_cyclones(config)
         cyclones_dir = create_dir(config)
         for cyclone in tqdm(cyclones):
