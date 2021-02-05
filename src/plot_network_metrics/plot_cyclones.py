@@ -11,8 +11,8 @@ def get_cyclones_for_special_date(frame, date):
         return row
     serial_numbers = list(map(int, set(row['Serial Number of system during year'])))
     sub_frame = frame[frame['Serial Number of system during year'].isin(serial_numbers)]
-    sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '') \
-                      & ~(sub_frame['Latitude (lat.)'] == '') & ~(sub_frame['Longitude (lon.)'] == '')]
+    sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '')
+                          & ~(sub_frame['Latitude (lat.)'] == '') & ~(sub_frame['Longitude (lon.)'] == '')]
     return sub_frame
 
 
@@ -39,22 +39,25 @@ def get_colors_for_cyclone(df, cyclone, date, number):
     if cyclone != '':
         if cyclone['number'] == number:
             current_index = get_current_index(df, date)
-            colors[current_index] = [1, 0, 0, 0]   # red
-            edgecolors[current_index] = [1, 0, 0]
+            if current_index != -1:
+                colors[current_index] = [1, 0, 0, 0]   # red
+                edgecolors[current_index] = [1, 0, 0]
     return colors, edgecolors
 
 
 def get_sizes_for_cyclone(df):
     s = 20
-    sizes_dict = {'L': s, '-': s, 'D over': s, np.nan: s, '': s, 'D': s*2, 'DD': s*3, 'CS': s*4, 'SCS': s*5, 'VSCS': s*5, 'ESCS': s*6, 'SUCS': s*7}
-    sizes = [sizes_dict[key] for key in list(df['Grade (text)'])]
+    sizes_dict = {'L': s, '-': s, 'D over': s, np.nan: s, '': s,
+                  'D': s*2, 'DD': s*3, 'CS': s*4, 'SCS': s*5,
+                  'VSCS': s*6, 'ESCS': s*7, 'SUCS': s*8}
+    sizes = [sizes_dict[key] for key in df['Grade (text)'].values]
     return sizes
 
 
 def add_cyclone_info(ax, df, lons, lats):
     text = str(list(set(df['Name']))[0]) + ' '
-    text += datetime.strptime(np.array(df['Date (DD/MM/YYYY)'])[0], '%d/%m/%Y').strftime('%d %b') + ' - '
-    text += datetime.strptime(np.array(df['Date (DD/MM/YYYY)'])[-1], '%d/%m/%Y').strftime('%d %b')
+    text += datetime.strptime(df['Date (DD/MM/YYYY)'][0], '%d/%m/%Y').strftime('%d %b') + ' - '
+    text += datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1], '%d/%m/%Y').strftime('%d %b')
     center = (min(lons) + max(lons)) * 0.5
     h = max(lats) + 3
     props = dict(facecolor='white', edgecolor='none', alpha=0.5)
@@ -62,29 +65,38 @@ def add_cyclone_info(ax, df, lons, lats):
             verticalalignment='top', bbox=props, transform=ccrs.PlateCarree())
 
 
-def plot_cyclones_on_map(date, ax, options, cyclone):
+def plot_cyclones_on_map(date, ax, config, cyclone):
     sheet_name = date[0:4]
-    frame = read_cyclones_file(options, sheet_name)
+    frame = read_cyclones_file(config.metrics_plot_options['cyclones_file_name'], sheet_name)
     sub_frame = get_cyclones_for_special_date(frame, date)
     if not sub_frame.empty:
         unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))
         for number in unique_serial_numbers:
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             df.index = range(0, len(df))
-            lons, lats = get_lat_lon_for_cyclone(df)
-            colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number)
-            sizes = get_sizes_for_cyclone(df)
-            ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
-            ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
-            add_cyclone_info(ax, df, lons, lats)
+            d1 = d2 = d3 = 0
+            if cyclone != '':
+                d1 = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
+                d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
+                d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
+                                       '%d/%m/%Y %H%M')
+            if cyclone == '' or d2 <= d1 <= d3:
+                lons, lats = get_lat_lon_for_cyclone(df)
+                colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number)
+                sizes = get_sizes_for_cyclone(df)
+                ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
+                ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
+                add_cyclone_info(ax, df, lons, lats)
 
 
-def get_current_cyclone_dict(frame):
+def get_current_cyclone_dict(df):
     cyclone = dict()
-    cyclone['start'] = datetime.strptime(np.array(frame['Date (DD/MM/YYYY)'])[0] + ' ' + np.array(frame['Time (UTC)'])[0], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
-    cyclone['end'] = datetime.strptime(np.array(frame['Date (DD/MM/YYYY)'])[-1] + ' ' + np.array(frame['Time (UTC)'])[-1], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
-    cyclone['number'] = int(list(set(frame['Serial Number of system during year']))[0])
-    cyclone['name'] = np.array(frame['Name'])[0]
+    cyclone['start'] = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' '
+                                         + df['Time (UTC)'][0], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
+    cyclone['end'] = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' '
+                                       + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
+    cyclone['number'] = int(list(set(df['Serial Number of system during year']))[0])
+    cyclone['name'] = df['Name'][0]
     return cyclone
 
 
@@ -95,21 +107,22 @@ def get_cyclones(config):
     cyclones = []
     current_date = start_date
     for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
-        frame = read_cyclones_file(config.cyclones_plot_options, str(year))
+        frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], str(year))
         while current_date <= end_date:
-            sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d  %H:%M:%S'))
+            sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
             if not sub_frame.empty:
                 unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))
                 for number in unique_serial_numbers:
                     df = sub_frame[sub_frame['Serial Number of system during year'] == number]
+                    df.index = range(0, len(df))
                     cyclone = get_current_cyclone_dict(df)
                     if cyclone not in cyclones:
                         cyclones.append(cyclone)
-                if number + 1 in np.array(frame['Serial Number of system during year']):
+                if number + 1 in frame['Serial Number of system during year'].values:
                     df = frame[frame['Serial Number of system during year'] == number + 1]
-                    current_date = datetime.strptime(np.array(df['Date (DD/MM/YYYY)'])[0], '%d/%m/%Y')
+                    current_date = datetime.strptime(df['Date (DD/MM/YYYY)'].values[0], '%d/%m/%Y')
                 else:
-                    current_date = datetime.strptime('01/01/' + str(year + 1), '%d/%m/%Y')
+                    current_date = datetime(year=year+1, month=1, day=1)
                     break
             else:
                 current_date += timedelta(days=1)
