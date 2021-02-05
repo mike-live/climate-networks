@@ -9,7 +9,7 @@ import matplotlib.ticker as mtick
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-from datetime import timedelta, datetime
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
 from . import utils
@@ -42,31 +42,37 @@ def plot_map_area(ax, coordinates):
     ax.add_feature(cfeature.RIVERS)
 
 
-def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone=''):
-    
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
-    times = np.asarray(pd.read_csv(file_name, sep='\n', header=None)[0])
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
-    lat = np.asarray(pd.read_csv(file_name, header=None)[0])
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
-    lon = np.asarray(pd.read_csv(file_name, header=None)[0])
-    
-    data = xr.DataArray(metric, dims=('lat', 'lon', 'time'), coords={'lat': lat, 'lon': lon, 'time': times})
-    
-    if config.metrics_plot_options['scaling_by_selected_data'] == True:
+def get_vmin_vmax(config, metric, data, considered_times):
+    if config.metrics_plot_options['scaling_by_selected_data'] == False:
+        vmin, vmax = np.nanpercentile(metric, [0.1, 99.9])
+    else:
         data = data.sel(time=considered_times)
         vmin = float(data.min(dim=['lat', 'lon', 'time'], skipna=True))
         vmax = float(data.max(dim=['lat', 'lon', 'time'], skipna=True))
-    else:
-        vmin, vmax = np.nanpercentile(metric, [0.1, 99.9])
+    return vmin, vmax
 
+
+def get_boundary_coordinates(config):
     west = config.download_ERA5_options['west']
     east = config.download_ERA5_options['east']
     south = config.download_ERA5_options['south']
     north = config.download_ERA5_options['north']
-    central_longitude = (east + west) / 2
+    return west, east, south, north
+
+
+def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone=''):
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
+    times = np.loadtxt(file_name, dtype='str', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
+    lat = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
+    lon = np.loadtxt(file_name, dtype='float', delimiter='\n')
     
-    xticks, yticks = utils.get_xyticks_for_map(west, east, south, north)
+    data = xr.DataArray(metric, dims=('lat', 'lon', 'time'), coords={'lat': lat, 'lon': lon, 'time': times})
+    vmin, vmax = get_vmin_vmax(config, metric, data, considered_times)
+
+    west, east, south, north = get_boundary_coordinates(config)
+    central_longitude = (east + west) / 2
     
     cmap = get_cmap()
     
@@ -77,135 +83,161 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone='
 
         num_levels = 50
         levels = np.linspace(vmin, vmax, num_levels + 1)
-
-        cf = ax.contourf(lon, lat, np.asarray(data.sel(time=t)), cmap=cmap, \
-                     levels=levels, vmin=vmin, vmax=vmax, transform=ccrs.PlateCarree())
+        cf = ax.contourf(lon, lat, np.asarray(data.sel(time=t)), cmap=cmap,
+                         levels=levels, vmin=vmin, vmax=vmax, transform=ccrs.PlateCarree())
         cb = fig.colorbar(cf, shrink=0.46)
         cb.ax.set_title(config.metrics_plot_options['metric_name'])
 
         ax.set_title(datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M:%S'))
-        ax.set_xticks(xticks, crs=ccrs.PlateCarree())
-        ax.set_yticks(yticks, crs=ccrs.PlateCarree())
-        lon_formatter = LongitudeFormatter(zero_direction_label=True)
-        lat_formatter = LatitudeFormatter()
-        ax.xaxis.set_major_formatter(lon_formatter)
-        ax.yaxis.set_major_formatter(lat_formatter)
+        gl = ax.gridlines(draw_labels=True)
+        gl.top_labels = gl.right_labels = gl.xlines = gl.ylines = False
+
+        ax.xaxis.set_major_formatter(LongitudeFormatter(zero_direction_label=True))
+        ax.yaxis.set_major_formatter(LatitudeFormatter())
         
         if config.metrics_plot_options['plot_cyclones']:
-            plot_cyclones.plot_cyclones_on_map(t, ax, config.metrics_plot_options, cyclone)
+            plot_cyclones.plot_cyclones_on_map(t, ax, config, cyclone)
         
         t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d-%b-%Y-%H-%M-%S')
-        file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + t_form + '.png')
+        ind = str(considered_times.index(t) + 1)
+        file_name = directory / (config.metrics_plot_options['metric_name'] + '_#' + ind + '_' + t_form + '.png')
         plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
         plt.close()
+
+
+def get_ymin_ymax(metric):
+    ymin = round(float(np.nanmin(metric)), 2)
+    ymax = round(float(np.nanmax(metric)), 2)
+    return ymin, ymax
+
+
+def plot_1d_metric_for_entire_time_interval(config, frame, considered_times, directory):
+    ymin, ymax = get_ymin_ymax(frame['metric'].values)
+    step = round((ymax - ymin) / 3, 2)
+
+    date_frame = frame[frame['time'].isin(considered_times)]
+    date_frame.index = range(0, len(date_frame))
+    dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in date_frame['time']]
+
+    fig = plt.figure(figsize=(20, 4))
+    ax = plt.gca()
+
+    ax.plot(dates, date_frame['metric'], 'b')
+    start_t = datetime.strptime(config.metrics_plot_options['start_time'],
+                                '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
+    end_t = datetime.strptime(config.metrics_plot_options['end_time'],
+                              '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
+    ax.set_title(start_t + ' - ' + end_t)
+
+    ax.set_xlabel('date')
+    if config.plotting_mode['cyclones'] and config.plotting_mode['metrics'] == False:
+        ax.axvline(mdates.date2num(datetime.strptime(start_t, '%d %b %Y %H:%M')), linestyle='--', color='gray')
+        ax.axvline(mdates.date2num(datetime.strptime(end_t, '%d %b %Y %H:%M')), linestyle='--', color='gray')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b %H:%M'))
+        if len(dates) <= 20:
+            ax.xaxis.set_major_locator(mtick.FixedLocator(dates))
+        else:
+            ax.xaxis.set_major_locator(mtick.AutoLocator())
+        fig.autofmt_xdate()
+    else:
+        if (mdates.num2date(dates[-1]) - mdates.num2date(dates[0])).days <= 31:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+            ax.xaxis.set_major_locator(mdates.DayLocator())
+        elif (mdates.num2date(dates[-1]) - mdates.num2date(dates[0])).days <= 366:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+            ax.xaxis.set_major_locator(mdates.MonthLocator())
+        else:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.set_xlim(dates[0], dates[-1])
+
+    ax.set_ylabel(config.metrics_plot_options['metric_name'])
+    ax.set_yticks(np.arange(ymin, ymax, step))
+    ax.set_ylim(ymin - step * 0.1, ymax)
+
+    file_name = directory / (config.metrics_plot_options['metric_name'] + '.png')
+    plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
+    plt.close()
+
+
+def plot_1d_metric_for_years(config, frame, directory):
+    ymin, ymax = get_ymin_ymax(frame['metric'].values)
+    step = round((ymax - ymin) / 3, 2)
+
+    years = utils.get_considered_years(config)
+    for year in years:
+        year_frame = frame[frame['time'].str.contains(str(year))]
+        year_frame.index = range(0, len(year_frame))
+        dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in year_frame['time']]
+
+        fig = plt.figure(figsize=(20, 4))
+        ax = plt.gca()
+
+        ax.plot(dates, year_frame['metric'], 'b')
+        ax.set_title(str(year))
+
+        ax.set_xlabel('date')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+        ax.xaxis.set_major_locator(mdates.MonthLocator())
+        ax.set_xlim(dates[0], dates[-1])
+
+        ax.set_ylabel(config.metrics_plot_options['metric_name'])
+        ax.set_yticks(np.arange(ymin, ymax, step))
+        ax.set_ylim(ymin - step * 0.1, ymax)
+
+        file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + str(year) + '.png')
+        plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
+        plt.close()
+
+
+def plot_1d_metric_for_months(config, frame, directory):
+    ymin, ymax = get_ymin_ymax(frame['metric'].values)
+    step = round((ymax - ymin) / 3, 2)
+
+    start_date = datetime.strptime(config.metrics_plot_options['start_time'], '%Y.%m.%d %H:%M:%S')
+    end_date = datetime.strptime(config.metrics_plot_options['end_time'], '%Y.%m.%d %H:%M:%S')
+
+    d = start_date
+    while d <= end_date:
+        month_frame = frame[frame['time'].str.contains(d.strftime("%Y.%m."))]
+        month_frame.index = range(0, len(month_frame))
+        dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in month_frame['time']]
+
+        fig = plt.figure(figsize=(20, 4))
+        ax = plt.gca()
+
+        ax.plot(dates, month_frame['metric'], 'b')
+        ax.set_title(d.strftime("%b %Y"))
+
+        ax.set_xlabel('date')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+        ax.xaxis.set_major_locator(mdates.DayLocator())
+        ax.set_xlim(dates[0], dates[-1])
+
+        ax.set_ylabel(config.metrics_plot_options['metric_name'])
+        ax.set_yticks(np.arange(ymin, ymax, step))
+        ax.set_ylim(ymin - step * 0.1, ymax)
+
+        file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + d.strftime("%b-%Y") + '.png')
+        plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
+        plt.close()
+
+        d += relativedelta(months=1)
 
 
 def plot_1d_metric_from_time(metric, considered_times, config, directory):
-    
     rcParams['font.size'] = 18
     rcParams['axes.titlesize'] = 'medium'
-    
+
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
-    times = list(pd.read_csv(file_name, sep='\n', header=None)[0])
+    times = np.loadtxt(file_name, dtype='str', delimiter='\n')
     frame = pd.DataFrame({'time': times, 'metric': metric})
-    ymin = round(float(np.nanmin(metric)), 2)
-    ymax = round(float(np.nanmax(metric)), 2)
-    step = round((ymax - ymin) / 3, 2)
     
     if config.metrics_plot_options['time_split'] == None:
-        date_frame = frame[frame['time'].isin(considered_times)]
-        date_frame.index = range(0, len(date_frame))
-        dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in date_frame['time']]
-        
-        plt.figure(figsize=(20, 4))
-        
-        plt.plot(dates, date_frame['metric'], 'b')
-        start_t = datetime.strptime(config.metrics_plot_options['start_time'], '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
-        end_t = datetime.strptime(config.metrics_plot_options['end_time'], '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M')
-        plt.title(start_t + ' - ' + end_t)
-        
-        plt.xlabel('date')
-
-        if config.plotting_mode['cyclones'] == True and config.plotting_mode['metrics'] == False:
-            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d %b %H:%M'))
-            if len(dates) <= 20:
-                plt.gca().xaxis.set_major_locator(mtick.FixedLocator(dates))
-            else:
-                plt.gca().xaxis.set_major_locator(mtick.AutoLocator())
-
-            plt.gcf().autofmt_xdate()
-        else:
-            if (mdates.num2date(dates[-1]) - mdates.num2date(dates[0])).days <= 31:
-                plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-                plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-            elif (mdates.num2date(dates[-1]) - mdates.num2date(dates[0])).days <= 366:
-                plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-                plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-            else:
-                plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-                plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-        plt.gca().set_xlim(dates[0], dates[-1])
-        
-        plt.ylabel(config.metrics_plot_options['metric_name'])
-        plt.gca().set_yticks(np.arange(ymin, ymax, step))
-        plt.gca().set_ylim(ymin - step*0.1, ymax)
-    
-        file_name = directory / (config.metrics_plot_options['metric_name'] + '.png')
-        plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
-        plt.close()
-    
+        plot_1d_metric_for_entire_time_interval(config, frame, considered_times, directory)
     elif config.metrics_plot_options['time_split'] == 'years':
-        years = utils.get_considered_years(config.metrics_plot_options)
-        for year in years:
-            year_frame = frame[frame['time'].str.contains(str(year))]
-            year_frame.index = range(0, len(year_frame))
-            dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in year_frame['time']]
-
-            plt.figure(figsize=(20, 4))
-            
-            plt.plot(dates, year_frame['metric'], 'b')
-            plt.title(str(year))
-            
-            plt.xlabel('date')
-            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-            plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-            plt.gca().set_xlim(dates[0], dates[-1])
-            
-            plt.ylabel(config.metrics_plot_options['metric_name'])
-            plt.gca().set_yticks(np.arange(ymin, ymax, step))
-            plt.gca().set_ylim(ymin - step*0.1, ymax)
-            
-            file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + str(year) + '.png')
-            plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
-            plt.close()
-            
+        plot_1d_metric_for_years(config, frame, directory)
     elif config.metrics_plot_options['time_split'] == 'months':
-        start_date = datetime.strptime(config.metrics_plot_options['start_time'], '%Y.%m.%d %H:%M:%S')
-        end_date = datetime.strptime(config.metrics_plot_options['end_time'], '%Y.%m.%d %H:%M:%S')
-        
-        d = start_date
-        while d <= end_date:
-            month_frame = frame[frame['time'].str.contains(d.strftime("%Y.%m."))]
-            month_frame.index = range(0, len(month_frame))
-            dates = [mdates.date2num(datetime.strptime(d, '%Y.%m.%d %H:%M:%S')) for d in month_frame['time']]
-            
-            plt.figure(figsize=(20, 4))
-            
-            plt.plot(dates, month_frame['metric'], 'b')
-            plt.title(d.strftime("%b %Y"))
+        plot_1d_metric_for_months(config, frame, directory)
 
-            plt.xlabel('date')
-            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-            plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-            plt.gca().set_xlim(dates[0], dates[-1])
-            
-            plt.ylabel(config.metrics_plot_options['metric_name'])
-            plt.gca().set_yticks(np.arange(ymin, ymax, step))
-            plt.gca().set_ylim(ymin - step*0.1, ymax)
-            
-            file_name = directory / (config.metrics_plot_options['metric_name'] + '_' + d.strftime("%b-%Y") + '.png')
-            plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
-            plt.close()
-            
-            d += relativedelta(months=1)
     rcParams.update(matplotlib.rcParamsDefault)
