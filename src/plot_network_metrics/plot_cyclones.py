@@ -22,29 +22,6 @@ def get_lat_lon_for_cyclone(sub_frame):
     return lons, lats
 
 
-def get_current_index(df, date):
-    d = '/'.join(date[0:10].split('.')[::-1])
-    df = df[(df['Date (DD/MM/YYYY)'] == d) & (df['Time (UTC)'] == date[11:13] + date[14:16])]
-    if not df.empty:
-        current_index = df.index[0]
-    else:
-        current_index = -1
-    return current_index
-
-
-def get_colors_for_cyclone(df, cyclone, date, number):
-    alpha = 0
-    colors = [[0, 0, 0, alpha]] * len(df)   # black
-    edgecolors = [[0, 0, 0]] * len(df)
-    if cyclone != '':
-        if cyclone['number'] == number:
-            current_index = get_current_index(df, date)
-            if current_index != -1:
-                colors[current_index] = [1, 0, 0, 0]   # red
-                edgecolors[current_index] = [1, 0, 0]
-    return colors, edgecolors
-
-
 def get_sizes_for_cyclone(df):
     s = 20
     sizes_dict = {'L': s, '-': s, 'D over': s, np.nan: s, '': s,
@@ -52,6 +29,40 @@ def get_sizes_for_cyclone(df):
                   'VSCS': s*6, 'ESCS': s*7, 'SUCS': s*8}
     sizes = [sizes_dict[key] for key in df['Grade (text)'].values]
     return sizes
+
+
+def get_current_index(df, date):
+    d = '/'.join(date[0:10].split('.')[::-1])
+    sub_df = df[(df['Date (DD/MM/YYYY)'] == d) & (df['Time (UTC)'] == date[11:13] + date[14:16])]
+    if not sub_df.empty:
+        current_index = sub_df.index[0]
+    else:
+        current_index = -1
+    return current_index
+
+
+def eliminate_point_overlap(colors, edgecolors, ci, sizes, lons, lats):
+    colors_new = colors.copy()
+    edgecolors_new = edgecolors.copy()
+    for k in range(ci+1, len(sizes)):
+        if lons[k] == lons[ci] and lats[k] == lats[ci] and sizes[k] == sizes[ci]:
+            colors_new[k] = colors[ci]
+            edgecolors_new[k] = edgecolors[ci]
+    return colors_new, edgecolors_new
+
+
+def get_colors_for_cyclone(df, cyclone, date, number, sizes, lons, lats):
+    alpha = 0
+    colors = [[0, 0, 0, alpha]] * len(df)   # black
+    edgecolors = [[0, 0, 0]] * len(df)
+    if cyclone != '':
+        if cyclone['number'] == number:
+            current_index = get_current_index(df, date)
+            if current_index != -1:
+                colors[current_index] = [1, 0, 0, alpha]   # red
+                edgecolors[current_index] = [1, 0, 0]
+                colors, edgecolors = eliminate_point_overlap(colors, edgecolors, current_index, sizes, lons, lats)
+    return colors, edgecolors
 
 
 def add_cyclone_info(ax, df, lons, lats):
@@ -74,16 +85,14 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
         for number in unique_serial_numbers:
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             df.index = range(0, len(df))
-            d1 = d2 = d3 = 0
-            if cyclone != '':
-                d1 = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
-                d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
-                d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
-                                       '%d/%m/%Y %H%M')
-            if cyclone == '' or d2 <= d1 <= d3:
+            d1 = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
+            d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
+            d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
+                                   '%d/%m/%Y %H%M')
+            if d2 <= d1 <= d3:
                 lons, lats = get_lat_lon_for_cyclone(df)
-                colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number)
                 sizes = get_sizes_for_cyclone(df)
+                colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number, sizes, lons, lats)
                 ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
                 ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
                 add_cyclone_info(ax, df, lons, lats)
