@@ -6,7 +6,7 @@ os.environ["MKL_NUM_THREADS"] = num_threads
 os.environ["VECLIB_MAXIMUM_THREADS"] = num_threads
 os.environ["NUMEXPR_NUM_THREADS"] = num_threads
 
-from pipeline.pipeline import main
+from pipeline import main
 
 if __name__ == "__main__":
     main()
