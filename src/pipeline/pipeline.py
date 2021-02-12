@@ -36,7 +36,6 @@ def compute_metrics_by_parts(config):
         corr_networks = np.moveaxis(corr_networks, -1, 0)
         res = parallel_compute_metrics(config, corr_networks)
         metrics += [res]
-        break
 
     metrics = combine_metric_parts(config, metrics)
     save_metrics(config, metrics)
