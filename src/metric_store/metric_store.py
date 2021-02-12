@@ -15,16 +15,11 @@ def add_metric(config, metric_name, metric_file_name):
 def get_metric_names(config, prefix = ''):
     metrics_dir = config.metrics['work_dir'] / config.metrics['output_metrics_dir']
     metric_names_file_name = metrics_dir / config.metrics['metric_names_file_name']
-    print(metric_names_file_name)
     if metric_names_file_name.exists():
         metric_names = np.load(metric_names_file_name, allow_pickle=True).item()
-        print(type(metric_names))
-        print(len(metric_names))
     else:
         metric_names = {}
-    print(metric_names)
     metric_names = filter_by_prefix(metric_names, prefix)
-    print(metric_names)
     return metric_names
 
 def save_metric(config, metric, metric_name):

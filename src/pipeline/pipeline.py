@@ -38,10 +38,7 @@ def compute_metrics_by_parts(config):
         metrics += [res]
         break
 
-    print(len(metrics))
-    print(metrics)
     metrics = combine_metric_parts(config, metrics)
-    print(len(metrics), list(metrics.keys()))
     save_metrics(config, metrics)
 
 
@@ -57,15 +54,12 @@ def compute_diff_metrics(config):
     metrics = load_metrics(config, prefix = prefix)
     metric_names = get_metric_names(config, prefix = prefix)
 
-    print(metric_names)
-
     #diff_metrics_dir = config.diff_metrics['work_dir'] / config.diff_metrics['output_diff_metrics_dir']
     #diff_metrics_dir.mkdir(parents=True, exist_ok=True)
 
     for metric_name in metric_names:
         #diff_metric_file_name = diff_metrics_dir / (metric_name + '_diff.npz')
         metric = extract_metric(metrics, metric_name, available_mask)
-        print(metric_name, metric.shape)
         diff_metric = parallel_compute_diff_metric(config, metric)
         save_metric(config, diff_metric, str(config.diff_metrics['output_diff_metrics_dir'] / metric_name))
 
@@ -79,7 +73,6 @@ def plot_2d_metrics(config):
     metric_names = get_metric_names(metrics)
     for metric_name in metric_names:
         metric = get_metric(metrics, metric_name, available_mask)
-        print(metric_name, metric.shape)
     
 
 

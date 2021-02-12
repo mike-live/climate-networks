@@ -6,7 +6,6 @@ import numpy as np
 
 def extract_metric(metrics, metric_name, mask):
     sel_metrics = []
-    print(metrics)
     for metric in metrics[metric_name]:
         cur_metric = metric
         if metric_name == 'EVC' or metric_name == 'EVC_w':
