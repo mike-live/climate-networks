@@ -22,8 +22,9 @@ def compute_metrics(config, corr_networks):
 
 def compute_metrics_by_parts(config):
     from tqdm import tqdm
-    from network_metrics import parallel_compute_metrics
+    from network_metrics import parallel_compute_metrics, combine_metric_parts
     from corr_network import load_data, get_available_mask
+    from metric_store import save_metrics 
     import numpy as np
     metrics = []
     data = load_data(config)
@@ -33,12 +34,40 @@ def compute_metrics_by_parts(config):
         config.correlations['id_part'] = id_part
         corr_networks = make_corr_networks(config, available_mask)
         corr_networks = np.moveaxis(corr_networks, -1, 0)
-        metrics += parallel_compute_metrics(config, corr_networks)
-    print(len(metrics))
-    print(metrics[0])
-    metrics_file_name = config.network_metrics['work_dir'] / config.network_metrics['output_metrics_file_name']
-    np.save(metrics_file_name, metrics)
+        res = parallel_compute_metrics(config, corr_networks)
+        metrics += [res]
+        break
 
+    print(len(metrics))
+    print(metrics)
+    metrics = combine_metric_parts(config, metrics)
+    print(len(metrics), list(metrics.keys()))
+    save_metrics(config, metrics)
+
+
+def compute_diff_metrics(config):
+    from corr_network import load_data, get_available_mask
+    from diff_metrics import parallel_compute_diff_metric
+    from network_metrics import extract_metric
+    from metric_store import save_metrics, save_metric, load_metrics, get_metric_names
+    import numpy as np
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+    prefix = str(config.network_metrics['output_network_metrics_dir'])
+    metrics = load_metrics(config, prefix = prefix)
+    metric_names = get_metric_names(config, prefix = prefix)
+
+    print(metric_names)
+
+    #diff_metrics_dir = config.diff_metrics['work_dir'] / config.diff_metrics['output_diff_metrics_dir']
+    #diff_metrics_dir.mkdir(parents=True, exist_ok=True)
+
+    for metric_name in metric_names:
+        #diff_metric_file_name = diff_metrics_dir / (metric_name + '_diff.npz')
+        metric = extract_metric(metrics, metric_name, available_mask)
+        print(metric_name, metric.shape)
+        diff_metric = parallel_compute_diff_metric(config, metric)
+        save_metric(config, diff_metric, str(config.diff_metrics['output_diff_metrics_dir'] / metric_name))
 
 
 def plot_2d_metrics(config):
@@ -70,6 +99,10 @@ def parse_args():
     parser.add_argument('--compute_metrics', dest='need_metrics', action='store_const',
                     const=True, default=False,
                     help='compute network metrics')
+    parser.add_argument('--compute_diff_metrics', dest='need_diff_metrics', action='store_const',
+                    const=True, default=False,
+                    help='compute diff metrics')
+                    
     parser.add_argument('--plot_metrics', dest='need_plot', action='store_const',
                     const=True, default=False,
                     help='plot network metrics')
@@ -88,6 +121,9 @@ def main():
 
     if args.need_metrics:
         compute_metrics(config)
+
+    if args.need_diff_metrics:
+        compute_diff_metrics(config)
 
     if args.need_correlations_and_metrics:
         compute_metrics_by_parts(config)
