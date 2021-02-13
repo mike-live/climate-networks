@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import xarray as xr
 import cv2
 import matplotlib
 from matplotlib import pyplot as plt, rcParams
@@ -42,14 +41,21 @@ def plot_map_area(ax, coordinates):
     ax.add_feature(cfeature.RIVERS)
 
 
-def get_vmin_vmax(config, metric, data, considered_times):
+def get_vmin_vmax(config, metric, considered_times, times):
     if config.metrics_plot_options['scaling_by_selected_data'] == False:
         vmin, vmax = np.nanpercentile(metric, [0.1, 99.9])
     else:
-        data = data.sel(time=considered_times)
-        vmin = float(data.min(dim=['lat', 'lon', 'time'], skipna=True))
-        vmax = float(data.max(dim=['lat', 'lon', 'time'], skipna=True))
+        data = metric[:, :, np.in1d(times, considered_times)]
+        vmin = np.nanmin(data)
+        vmax = np.nanmax(data)
     return vmin, vmax
+
+
+def set_vmin_vmax(metric, vmin, vmax):
+    data = metric.copy()
+    data[np.where(data < vmin)] = vmin
+    data[np.where(data > vmax)] = vmax
+    return data
 
 
 def get_boundary_coordinates(config):
@@ -61,15 +67,17 @@ def get_boundary_coordinates(config):
 
 
 def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone=''):
+    # metric - 3D np.ndarray (lat, lon, time)
+
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
     times = np.loadtxt(file_name, dtype='str', delimiter='\n')
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
     lat = np.loadtxt(file_name, dtype='float', delimiter='\n')
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
     lon = np.loadtxt(file_name, dtype='float', delimiter='\n')
-    
-    data = xr.DataArray(metric, dims=('lat', 'lon', 'time'), coords={'lat': lat, 'lon': lon, 'time': times})
-    vmin, vmax = get_vmin_vmax(config, metric, data, considered_times)
+
+    vmin, vmax = get_vmin_vmax(config, metric, considered_times, times)
+    metric = set_vmin_vmax(metric, vmin, vmax)
 
     west, east, south, north = get_boundary_coordinates(config)
     central_longitude = (east + west) / 2
@@ -83,7 +91,7 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone='
 
         num_levels = 50
         levels = np.linspace(vmin, vmax, num_levels + 1)
-        cf = ax.contourf(lon, lat, np.asarray(data.sel(time=t)), cmap=cmap,
+        cf = ax.contourf(lon, lat, metric[:, :, np.where(times == t)[0][0]], cmap=cmap,
                          levels=levels, vmin=vmin, vmax=vmax, transform=ccrs.PlateCarree())
         cb = fig.colorbar(cf, shrink=0.46)
         cb.ax.set_title(config.metrics_plot_options['metric_name'])
