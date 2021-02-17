@@ -4,6 +4,14 @@ import numpy as np
 import os
 
 
+def is_float(st):
+    try:
+        float(st)
+        return True
+    except ValueError:
+        return False
+
+
 def delete_empty_rows(frame):
     new_frame = frame.copy()
     for ind, row in frame.iterrows():
@@ -60,8 +68,7 @@ def get_considered_times_for_cyclone(cyclone, config):
     frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], sheet_name)
     sub_frame = frame[frame['Serial Number of system during year'] == cyclone['number']]
     for ind, row in sub_frame.iterrows():
-        if row['Date (DD/MM/YYYY)'] != '' and row['Time (UTC)'] != '' \
-                and row['Latitude (lat.)'] != '' and row['Longitude (lon.)'] != '':
+        if row['Date (DD/MM/YYYY)'] != '' and row['Time (UTC)'] != '':
             ct = datetime.strptime(row['Date (DD/MM/YYYY)'] + ' ' + row['Time (UTC)'], '%d/%m/%Y %H%M')
             considered_times.append(ct)
 
@@ -70,6 +77,13 @@ def get_considered_times_for_cyclone(cyclone, config):
     considered_times = [t.strftime('%Y.%m.%d %H:%M:%S') for t in considered_times]
 
     return considered_times
+
+
+def update_config_for_plot_cyclone(config, cyclone):
+    config.metrics_plot_options['start_time'] = cyclone['start']
+    config.metrics_plot_options['end_time'] = cyclone['end']
+    config.metrics_plot_options['time_split'] = None
+    config.metrics_plot_options['plot_cyclones'] = True
 
 
 def get_run_time_images_dir_name_for_metrics(config):
