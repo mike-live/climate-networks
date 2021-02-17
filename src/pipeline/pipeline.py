@@ -45,9 +45,9 @@ def plot_metrics(config):
     from corr_network import load_data, get_available_mask
     from network_metrics import load_metrics, get_metric
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
-    from plot_network_metrics.utils import create_dir, \
-        create_cyclone_metric_dir, get_considered_times, get_considered_times_for_cyclone
-    from plot_network_metrics.plot_cyclones import get_cyclones, update_config_for_plot_cyclone
+    from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, \
+        get_considered_times, get_considered_times_for_cyclone, update_config_for_plot_cyclone
+    from plot_network_metrics.plot_cyclones import get_cyclones
     from tqdm import tqdm
 
     data = load_data(config)
