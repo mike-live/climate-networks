@@ -1,7 +1,7 @@
 import numpy as np
 import cartopy.crs as ccrs
 from datetime import timedelta, datetime
-from plot_network_metrics.utils import read_cyclones_file
+from plot_network_metrics.utils import read_cyclones_file, is_float
 
 
 def get_cyclones_for_special_date(frame, date):
@@ -11,14 +11,86 @@ def get_cyclones_for_special_date(frame, date):
         return row
     serial_numbers = list(map(int, set(row['Serial Number of system during year'])))
     sub_frame = frame[frame['Serial Number of system during year'].isin(serial_numbers)]
-    sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '')
-                          & ~(sub_frame['Latitude (lat.)'] == '') & ~(sub_frame['Longitude (lon.)'] == '')]
+    sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '')]
+    sub_frame.index = range(0, len(sub_frame))
     return sub_frame
 
 
-def get_lat_lon_for_cyclone(sub_frame):
-    lons = list(map(float, sub_frame['Longitude (lon.)']))
-    lats = list(map(float, sub_frame['Latitude (lat.)']))
+def get_only_known_data(frame):
+    mask = list(map(is_float, frame['Longitude (lon.)'].values)) \
+           and list(map(is_float, frame['Latitude (lat.)'].values))
+    sub_frame = frame[mask]
+    sub_frame.index = range(0, len(sub_frame))
+    return sub_frame
+
+
+def get_current_cyclone_dict(df):
+    cyclone = dict()
+    cyclone['start'] = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' '
+                                         + df['Time (UTC)'][0], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
+    cyclone['end'] = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' '
+                                       + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
+    cyclone['number'] = int(list(set(df['Serial Number of system during year']))[0])
+    cyclone['name'] = df['Name'][0]
+    return cyclone
+
+
+def get_cyclones(config):
+    start_date = datetime.strptime(config.cyclones_plot_options['start_time'], '%Y.%m.%d %H:%M:%S')
+    end_date = datetime.strptime(config.cyclones_plot_options['end_time'], '%Y.%m.%d %H:%M:%S')
+
+    cyclones = []
+    current_date = start_date
+    for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
+        frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], str(year))
+        while current_date <= end_date:
+            sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
+            if not sub_frame.empty:
+                unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))
+                for number in unique_serial_numbers:
+                    df = sub_frame[sub_frame['Serial Number of system during year'] == number]
+                    df.index = range(0, len(df))
+                    cyclone = get_current_cyclone_dict(df)
+                    if cyclone not in cyclones:
+                        cyclones.append(cyclone)
+                if number + 1 in frame['Serial Number of system during year'].values:
+                    df = frame[frame['Serial Number of system during year'] == number + 1]
+                    current_date = datetime.strptime(df['Date (DD/MM/YYYY)'].values[0], '%d/%m/%Y')
+                else:
+                    current_date = datetime(year=year+1, month=1, day=1)
+                    break
+            else:
+                current_date += timedelta(days=1)
+    return cyclones
+
+
+def get_times_and_positions_for_unknown_points(df, df_k):
+    times = []
+    lons = []
+    lats = []
+    d1 = datetime.strptime(df_k['Date (DD/MM/YYYY)'][0] + ' ' + df_k['Time (UTC)'][0], '%d/%m/%Y %H%M')
+    for k in range(0, len(df)):
+        if not (is_float(df['Longitude (lon.)'][k]) and is_float(df['Latitude (lat.)'][k])):
+            d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][k] + ' ' + df['Time (UTC)'][k], '%d/%m/%Y %H%M')
+            times.append(d2)
+            if d2 < d1:
+                for i in range(k+1, len(df)):
+                    if is_float(df['Longitude (lon.)'][i]) and is_float(df['Latitude (lat.)'][i]):
+                        lons.append(float(df['Longitude (lon.)'][i]))
+                        lats.append(float(df['Latitude (lat.)'][i]))
+                        break
+            else:
+                for i in range(k-1, -1, -1):
+                    if is_float(df['Longitude (lon.)'][i]) and is_float(df['Latitude (lat.)'][i]):
+                        lons.append(float(df['Longitude (lon.)'][i]))
+                        lats.append(float(df['Latitude (lat.)'][i]))
+                        break
+    return times, lons, lats
+
+
+def get_lat_lon_for_cyclone(df):
+    lons = list(map(float, df['Longitude (lon.)'].values))
+    lats = list(map(float, df['Latitude (lat.)'].values))
     return lons, lats
 
 
@@ -76,6 +148,13 @@ def add_cyclone_info(ax, df, lons, lats):
             verticalalignment='top', bbox=props, transform=ccrs.PlateCarree())
 
 
+def plot_unknown_point(ax, date, times, lons, lats, cyclone, number):
+    if cyclone['number'] == number:
+        if date in times:
+            ind = times.index(date)
+            ax.scatter(lons[ind], lats[ind], c='r', s=70, marker='X', transform=ccrs.PlateCarree(), zorder=10)
+
+
 def plot_cyclones_on_map(date, ax, config, cyclone):
     sheet_name = date[0:4]
     frame = read_cyclones_file(config.metrics_plot_options['cyclones_file_name'], sheet_name)
@@ -90,56 +169,14 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
             d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
                                    '%d/%m/%Y %H%M')
             if d2 <= d1 <= d3:
-                lons, lats = get_lat_lon_for_cyclone(df)
-                sizes = get_sizes_for_cyclone(df)
-                colors, edgecolors = get_colors_for_cyclone(df, cyclone, date, number, sizes, lons, lats)
-                ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
-                ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes, transform=ccrs.PlateCarree())
-                add_cyclone_info(ax, df, lons, lats)
-
-
-def get_current_cyclone_dict(df):
-    cyclone = dict()
-    cyclone['start'] = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' '
-                                         + df['Time (UTC)'][0], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
-    cyclone['end'] = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' '
-                                       + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
-    cyclone['number'] = int(list(set(df['Serial Number of system during year']))[0])
-    cyclone['name'] = df['Name'][0]
-    return cyclone
-
-
-def get_cyclones(config):
-    start_date = datetime.strptime(config.cyclones_plot_options['start_time'], '%Y.%m.%d %H:%M:%S')
-    end_date = datetime.strptime(config.cyclones_plot_options['end_time'], '%Y.%m.%d %H:%M:%S')
-
-    cyclones = []
-    current_date = start_date
-    for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
-        frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], str(year))
-        while current_date <= end_date:
-            sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
-            if not sub_frame.empty:
-                unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))
-                for number in unique_serial_numbers:
-                    df = sub_frame[sub_frame['Serial Number of system during year'] == number]
-                    df.index = range(0, len(df))
-                    cyclone = get_current_cyclone_dict(df)
-                    if cyclone not in cyclones:
-                        cyclones.append(cyclone)
-                if number + 1 in frame['Serial Number of system during year'].values:
-                    df = frame[frame['Serial Number of system during year'] == number + 1]
-                    current_date = datetime.strptime(df['Date (DD/MM/YYYY)'].values[0], '%d/%m/%Y')
-                else:
-                    current_date = datetime(year=year+1, month=1, day=1)
-                    break
-            else:
-                current_date += timedelta(days=1)
-    return cyclones
-
-
-def update_config_for_plot_cyclone(config, cyclone):
-    config.metrics_plot_options['start_time'] = cyclone['start']
-    config.metrics_plot_options['end_time'] = cyclone['end']
-    config.metrics_plot_options['time_split'] = None
-    config.metrics_plot_options['plot_cyclones'] = True
+                df_k = get_only_known_data(df)
+                if not df_k.empty:
+                    time_unk_points, lon_unk_points, lat_unk_points = get_times_and_positions_for_unknown_points(df, df_k)
+                    lons, lats = get_lat_lon_for_cyclone(df_k)
+                    sizes = get_sizes_for_cyclone(df_k)
+                    colors, edgecolors = get_colors_for_cyclone(df_k, cyclone, date, number, sizes, lons, lats)
+                    ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
+                    ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes,
+                               transform=ccrs.PlateCarree(), zorder=10)
+                    plot_unknown_point(ax, d1, time_unk_points, lon_unk_points, lat_unk_points, cyclone, number)
+                    add_cyclone_info(ax, df, lons, lats)
