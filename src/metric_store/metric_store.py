@@ -37,7 +37,7 @@ def save_metrics(config, metrics):
     
 def load_metric(config, metric_name):
     metrics_dir = config.metrics['work_dir'] / config.metrics['output_metrics_dir']
-    metrics_file_name = metrics_dir / (metric_name + '.npy')
+    metrics_file_name = metrics_dir / (str(metric_name) + '.npy')
     metric = np.load(metrics_file_name)
     return metric
 

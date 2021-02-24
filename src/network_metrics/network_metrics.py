@@ -4,24 +4,32 @@ from corr_network.corr_network import expand_to_2d_by_mask
 from helpers.parallel_maker import parallel_execute, make_args
 import numpy as np
 
+def prepare_metric(metric_name, sel_metric, mask):
+    if str(metric_name).startswith('network_metrics'):
+        sel_metric = np.array(sel_metric)
+        cur_metric = sel_metric[0]
+        sel_metric = np.moveaxis(sel_metric, 0, -1)
+        if np.isscalar(cur_metric):
+            pass
+        elif mask.sum() == len(cur_metric):
+            sel_metric = expand_to_2d_by_mask(sel_metric, mask)
+        else:
+            assert(False)
+    if str(metric_name).startswith('input_data'):
+        sel_metric = np.moveaxis(sel_metric, 0, -1)
+    return sel_metric
+
 def extract_metric(metrics, metric_name, mask):
-    sel_metrics = []
+    sel_metric = []
     for metric in metrics[metric_name]:
         cur_metric = metric
         if metric_name == 'EVC' or metric_name == 'EVC_w':
             cur_metric = np.abs(cur_metric)
         if type(cur_metric) is np.ndarray:
             cur_metric = cur_metric.flatten()
-        sel_metrics.append(cur_metric)
-    sel_metrics = np.array(sel_metrics)
-    sel_metrics = np.moveaxis(sel_metrics, 0, -1)
-    if np.isscalar(cur_metric):
-        pass
-    elif mask.sum() == len(cur_metric):
-        sel_metrics = expand_to_2d_by_mask(sel_metrics, mask)
-    else:
-        assert(False)
-    return sel_metrics
+        sel_metric.append(cur_metric)
+    sel_metric = prepare_metric(metric_name, sel_metric, mask)
+    return sel_metric
 
 def compute_metrics(result, corr_matricies, ids):
     #print('Start', ids[0], ids[-1], flush=True)
