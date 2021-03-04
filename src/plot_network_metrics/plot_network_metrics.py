@@ -66,7 +66,7 @@ def get_boundary_coordinates(config):
     return west, east, south, north
 
 
-def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone=''):
+def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone):
     # metric - 3D np.ndarray (lat, lon, time)
 
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
