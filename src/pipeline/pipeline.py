@@ -92,7 +92,8 @@ def plot_metrics(config):
             metric = prepare_metric(metric_name, metric, available_mask)
             print(metric_name, metric.shape)
             if config.metric_dimension[metric_name] == '2D':
-                plot_2d_metric_on_map(metric, considered_times, config, metric_dir)
+                empty_dict = dict.fromkeys(['start', 'end', 'number', 'name'], '')
+                plot_2d_metric_on_map(metric, considered_times, config, metric_dir, empty_dict)
             elif config.metric_dimension[metric_name] == '1D':
                 plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
 
