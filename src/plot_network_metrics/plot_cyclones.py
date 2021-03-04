@@ -113,28 +113,22 @@ def get_current_index(df, date):
     return current_index
 
 
-def eliminate_point_overlap(colors, edgecolors, ci, sizes, lons, lats):
-    colors_new = colors.copy()
-    edgecolors_new = edgecolors.copy()
-    for k in range(ci+1, len(sizes)):
-        if lons[k] == lons[ci] and lats[k] == lats[ci] and sizes[k] == sizes[ci]:
-            colors_new[k] = colors[ci]
-            edgecolors_new[k] = edgecolors[ci]
-    return colors_new, edgecolors_new
+def plot_cyclone_points(ax, ci, lons, lats, sizes, cyclone, number):
+    for i in range(0, len(lons)):
+        # cyclone['number'] == number -> means that the point is marked only at the considered cyclone
+        if cyclone['number'] == number and i == ci:
+            ax.scatter(lons[i], lats[i], color=[1, 0, 0, 0], edgecolors=[1, 0, 0], s=sizes[i],
+                       transform=ccrs.PlateCarree(), zorder=20)
+        else:
+            ax.scatter(lons[i], lats[i], color=[0, 0, 0, 0], edgecolors=[0, 0, 0], s=sizes[i],
+                       transform=ccrs.PlateCarree(), zorder=10)
 
 
-def get_colors_for_cyclone(df, cyclone, date, number, sizes, lons, lats):
-    alpha = 0
-    colors = [[0, 0, 0, alpha]] * len(df)   # black
-    edgecolors = [[0, 0, 0]] * len(df)
-    if cyclone != '':
-        if cyclone['number'] == number:
-            current_index = get_current_index(df, date)
-            if current_index != -1:
-                colors[current_index] = [1, 0, 0, alpha]   # red
-                edgecolors[current_index] = [1, 0, 0]
-                colors, edgecolors = eliminate_point_overlap(colors, edgecolors, current_index, sizes, lons, lats)
-    return colors, edgecolors
+def plot_unknown_point(ax, date, times, lons, lats, cyclone, number):
+    if cyclone['number'] == number:
+        if date in times:
+            ind = times.index(date)
+            ax.scatter(lons[ind], lats[ind], c='r', s=70, marker='X', transform=ccrs.PlateCarree(), zorder=10)
 
 
 def add_cyclone_info(ax, df, lons, lats):
@@ -146,13 +140,6 @@ def add_cyclone_info(ax, df, lons, lats):
     props = dict(facecolor='white', edgecolor='none', alpha=0.5)
     ax.text(center, h, text, horizontalalignment='center',
             verticalalignment='top', bbox=props, transform=ccrs.PlateCarree())
-
-
-def plot_unknown_point(ax, date, times, lons, lats, cyclone, number):
-    if cyclone['number'] == number:
-        if date in times:
-            ind = times.index(date)
-            ax.scatter(lons[ind], lats[ind], c='r', s=70, marker='X', transform=ccrs.PlateCarree(), zorder=10)
 
 
 def plot_cyclones_on_map(date, ax, config, cyclone):
@@ -174,9 +161,8 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
                     time_unk_points, lon_unk_points, lat_unk_points = get_times_and_positions_for_unknown_points(df, df_k)
                     lons, lats = get_lat_lon_for_cyclone(df_k)
                     sizes = get_sizes_for_cyclone(df_k)
-                    colors, edgecolors = get_colors_for_cyclone(df_k, cyclone, date, number, sizes, lons, lats)
+                    ci = get_current_index(df_k, date)
                     ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
-                    ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes,
-                               transform=ccrs.PlateCarree(), zorder=10)
+                    plot_cyclone_points(ax, ci, lons, lats, sizes, cyclone, number)
                     plot_unknown_point(ax, d1, time_unk_points, lon_unk_points, lat_unk_points, cyclone, number)
                     add_cyclone_info(ax, df, lons, lats)
