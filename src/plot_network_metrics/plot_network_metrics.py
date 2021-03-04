@@ -94,7 +94,7 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone):
         cf = ax.contourf(lon, lat, metric[:, :, np.where(times == t)[0][0]], cmap=cmap,
                          levels=levels, vmin=vmin, vmax=vmax, transform=ccrs.PlateCarree())
         cb = fig.colorbar(cf, shrink=0.46)
-        cb.ax.set_title(config.metrics_plot_options['metric_name'])
+        cb.set_label(config.metrics_plot_options['metric_name'], rotation=270, labelpad=20)
 
         ax.set_title(datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M:%S'))
         gl = ax.gridlines(draw_labels=True)
