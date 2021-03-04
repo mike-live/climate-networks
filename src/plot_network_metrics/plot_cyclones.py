@@ -17,8 +17,9 @@ def get_cyclones_for_special_date(frame, date):
 
 
 def get_only_known_data(frame):
-    mask = list(map(is_float, frame['Longitude (lon.)'].values)) \
-           and list(map(is_float, frame['Latitude (lat.)'].values))
+    l1 = list(map(is_float, frame['Longitude (lon.)'].values))
+    l2 = list(map(is_float, frame['Latitude (lat.)'].values))
+    mask = [a and b for a, b in zip(l1, l2)]
     sub_frame = frame[mask]
     sub_frame.index = range(0, len(sub_frame))
     return sub_frame
