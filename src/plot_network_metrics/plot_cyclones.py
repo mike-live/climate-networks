@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import cartopy.crs as ccrs
 from datetime import timedelta, datetime
 from plot_network_metrics.utils import read_cyclones_file, is_float
@@ -89,6 +90,29 @@ def get_times_and_positions_for_unknown_points(df, df_k):
     return times, lons, lats
 
 
+def extension_df_for_cyclone(df):
+    df_extended = pd.DataFrame()
+    start_date = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
+    end_date = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M')
+
+    d = start_date
+    delta = timedelta(hours=3)
+    while d <= end_date:
+        current_date_str = d.strftime('%d/%m/%Y')
+        current_time_str = d.strftime('%H%M')
+        row = df[(df['Date (DD/MM/YYYY)'] == current_date_str) & (df['Time (UTC)'] == current_time_str)]
+        if not row.empty:
+            df_extended = df_extended.append(row)
+        else:
+            df_extended = df_extended.append(df_extended.iloc[-1, :])
+            df_extended.iloc[-1, list(df_extended.columns).index('Date (DD/MM/YYYY)')] = current_date_str
+            df_extended.iloc[-1, list(df_extended.columns).index('Time (UTC)')] = current_time_str
+            df_extended.iloc[-1, list(df_extended.columns).index('Time (UTC)')+1:] = ' '
+        d += delta
+    df_extended.index = range(0, len(df_extended))
+    return df_extended
+
+
 def get_lat_lon_for_cyclone(df):
     lons = list(map(float, df['Longitude (lon.)'].values))
     lats = list(map(float, df['Latitude (lat.)'].values))
@@ -152,6 +176,7 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
         for number in unique_serial_numbers:
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             df.index = range(0, len(df))
+            df = extension_df_for_cyclone(df)
             d1 = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
             d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
             d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
