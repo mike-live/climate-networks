@@ -1,7 +1,6 @@
 from datetime import timedelta, datetime
 import pandas as pd
 import numpy as np
-import os
 
 
 def is_float(st):
@@ -60,21 +59,18 @@ def get_considered_times(config):
 
 
 def get_considered_times_for_cyclone(cyclone, config):
-    considered_times = [datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S') - timedelta(hours=(i + 1) * 3)
-                        for i in range(0, config.cyclones_plot_options['n_3h_intervals_before_after'])]
-    considered_times = considered_times[::-1]
+    considered_times = []
 
-    sheet_name = cyclone['start'][0:4]
-    frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], sheet_name)
-    sub_frame = frame[frame['Serial Number of system during year'] == cyclone['number']]
-    for ind, row in sub_frame.iterrows():
-        if row['Date (DD/MM/YYYY)'] != '' and row['Time (UTC)'] != '':
-            ct = datetime.strptime(row['Date (DD/MM/YYYY)'] + ' ' + row['Time (UTC)'], '%d/%m/%Y %H%M')
-            considered_times.append(ct)
+    start_date = datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S') - \
+                 timedelta(hours=3*config.cyclones_plot_options['n_3h_intervals_before_after'])
+    end_date = datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S') + \
+                 timedelta(hours=3*config.cyclones_plot_options['n_3h_intervals_before_after'])
 
-    considered_times += [datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S') + timedelta(hours=(i + 1) * 3)
-                         for i in range(0, config.cyclones_plot_options['n_3h_intervals_before_after'])]
-    considered_times = [t.strftime('%Y.%m.%d %H:%M:%S') for t in considered_times]
+    d = start_date
+    delta = timedelta(hours=3)
+    while d <= end_date:
+        considered_times.append(d.strftime("%Y.%m.%d %H:%M:%S"))
+        d += delta
 
     return considered_times
 
