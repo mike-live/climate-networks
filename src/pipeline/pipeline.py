@@ -116,6 +116,10 @@ def plot_metrics(config):
                     plot_1d_metric_from_time(metric, considered_times, config, cyclone_metric_dir)
 
 
+def compute_all_time_local_metrics(config):
+    pass
+
+
 def parse_args():
     import argparse
 
@@ -139,6 +143,10 @@ def parse_args():
     parser.add_argument('--plot_metrics', dest='need_plot', action='store_const',
                     const=True, default=False,
                     help='plot network metrics')
+
+    parser.add_argument('--compute_all_time_local_metrics', dest='need_all_time_local_metrics', action='store_const',
+                    const=True, default=False,
+                    help='compute all time local metrics')
 
     args = parser.parse_args()
     return args
@@ -164,3 +172,6 @@ def main():
 
     if args.need_plot:
         plot_metrics(config)
+
+    if args.need_all_time_local_metrics:
+        compute_all_time_local_metrics(config)
