@@ -68,8 +68,8 @@ def compute_diff_metrics(config):
 
 def plot_metrics(config):
     from corr_network import load_data, get_available_mask
-    from network_metrics import extract_metric, prepare_metric
-    from metric_store import load_metrics, get_metric_names, load_metric
+    from network_metrics import prepare_metric
+    from metric_store import get_metric_names, load_metric
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
     from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, \
         get_considered_times, get_considered_times_for_cyclone, update_config_for_plot_cyclone
@@ -78,7 +78,6 @@ def plot_metrics(config):
 
     data = load_data(config)
     available_mask = get_available_mask(data)
-    #metrics = load_metrics(config)
 
     if config.metrics_plot_options['metric_names'] is None:
         config.metrics_plot_options['metric_names'] = get_metric_names(config)
@@ -92,7 +91,8 @@ def plot_metrics(config):
             metric = prepare_metric(metric_name, metric, available_mask)
             print(metric_name, metric.shape)
             if config.metric_dimension[metric_name] == '2D':
-                plot_2d_metric_on_map(metric, considered_times, config, metric_dir)
+                empty_dict = dict.fromkeys(['start', 'end', 'number', 'name'], '')
+                plot_2d_metric_on_map(metric, considered_times, config, metric_dir, empty_dict)
             elif config.metric_dimension[metric_name] == '1D':
                 plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
 
