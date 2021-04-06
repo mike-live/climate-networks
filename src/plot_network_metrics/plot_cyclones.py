@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import cartopy.crs as ccrs
 from datetime import timedelta, datetime
 from plot_network_metrics.utils import read_cyclones_file, is_float
@@ -17,8 +18,9 @@ def get_cyclones_for_special_date(frame, date):
 
 
 def get_only_known_data(frame):
-    mask = list(map(is_float, frame['Longitude (lon.)'].values)) \
-           and list(map(is_float, frame['Latitude (lat.)'].values))
+    l1 = list(map(is_float, frame['Longitude (lon.)'].values))
+    l2 = list(map(is_float, frame['Latitude (lat.)'].values))
+    mask = [a and b for a, b in zip(l1, l2)]
     sub_frame = frame[mask]
     sub_frame.index = range(0, len(sub_frame))
     return sub_frame
@@ -88,6 +90,29 @@ def get_times_and_positions_for_unknown_points(df, df_k):
     return times, lons, lats
 
 
+def extension_df_for_cyclone(df):
+    df_extended = pd.DataFrame()
+    start_date = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
+    end_date = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M')
+
+    d = start_date
+    delta = timedelta(hours=3)
+    while d <= end_date:
+        current_date_str = d.strftime('%d/%m/%Y')
+        current_time_str = d.strftime('%H%M')
+        row = df[(df['Date (DD/MM/YYYY)'] == current_date_str) & (df['Time (UTC)'] == current_time_str)]
+        if not row.empty:
+            df_extended = df_extended.append(row)
+        else:
+            df_extended = df_extended.append(df_extended.iloc[-1, :])
+            df_extended.iloc[-1, list(df_extended.columns).index('Date (DD/MM/YYYY)')] = current_date_str
+            df_extended.iloc[-1, list(df_extended.columns).index('Time (UTC)')] = current_time_str
+            df_extended.iloc[-1, list(df_extended.columns).index('Time (UTC)')+1:] = ' '
+        d += delta
+    df_extended.index = range(0, len(df_extended))
+    return df_extended
+
+
 def get_lat_lon_for_cyclone(df):
     lons = list(map(float, df['Longitude (lon.)'].values))
     lats = list(map(float, df['Latitude (lat.)'].values))
@@ -113,28 +138,22 @@ def get_current_index(df, date):
     return current_index
 
 
-def eliminate_point_overlap(colors, edgecolors, ci, sizes, lons, lats):
-    colors_new = colors.copy()
-    edgecolors_new = edgecolors.copy()
-    for k in range(ci+1, len(sizes)):
-        if lons[k] == lons[ci] and lats[k] == lats[ci] and sizes[k] == sizes[ci]:
-            colors_new[k] = colors[ci]
-            edgecolors_new[k] = edgecolors[ci]
-    return colors_new, edgecolors_new
+def plot_cyclone_points(ax, ci, lons, lats, sizes, cyclone, number):
+    for i in range(0, len(lons)):
+        # cyclone['number'] == number -> means that the point is marked only at the considered cyclone
+        if cyclone['number'] == number and i == ci:
+            ax.scatter(lons[i], lats[i], color=[1, 0, 0, 0], edgecolors=[1, 0, 0], s=sizes[i],
+                       transform=ccrs.PlateCarree(), zorder=20)
+        else:
+            ax.scatter(lons[i], lats[i], color=[0, 0, 0, 0], edgecolors=[0, 0, 0], s=sizes[i],
+                       transform=ccrs.PlateCarree(), zorder=10)
 
 
-def get_colors_for_cyclone(df, cyclone, date, number, sizes, lons, lats):
-    alpha = 0
-    colors = [[0, 0, 0, alpha]] * len(df)   # black
-    edgecolors = [[0, 0, 0]] * len(df)
-    if cyclone != '':
-        if cyclone['number'] == number:
-            current_index = get_current_index(df, date)
-            if current_index != -1:
-                colors[current_index] = [1, 0, 0, alpha]   # red
-                edgecolors[current_index] = [1, 0, 0]
-                colors, edgecolors = eliminate_point_overlap(colors, edgecolors, current_index, sizes, lons, lats)
-    return colors, edgecolors
+def plot_unknown_point(ax, date, times, lons, lats, cyclone, number):
+    if cyclone['number'] == number:
+        if date in times:
+            ind = times.index(date)
+            ax.scatter(lons[ind], lats[ind], c='r', s=70, marker='X', transform=ccrs.PlateCarree(), zorder=10)
 
 
 def add_cyclone_info(ax, df, lons, lats):
@@ -148,13 +167,6 @@ def add_cyclone_info(ax, df, lons, lats):
             verticalalignment='top', bbox=props, transform=ccrs.PlateCarree())
 
 
-def plot_unknown_point(ax, date, times, lons, lats, cyclone, number):
-    if cyclone['number'] == number:
-        if date in times:
-            ind = times.index(date)
-            ax.scatter(lons[ind], lats[ind], c='r', s=70, marker='X', transform=ccrs.PlateCarree(), zorder=10)
-
-
 def plot_cyclones_on_map(date, ax, config, cyclone):
     sheet_name = date[0:4]
     frame = read_cyclones_file(config.metrics_plot_options['cyclones_file_name'], sheet_name)
@@ -164,6 +176,7 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
         for number in unique_serial_numbers:
             df = sub_frame[sub_frame['Serial Number of system during year'] == number]
             df.index = range(0, len(df))
+            df = extension_df_for_cyclone(df)
             d1 = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
             d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][0] + ' ' + df['Time (UTC)'][0], '%d/%m/%Y %H%M')
             d3 = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' ' + df['Time (UTC)'][len(df)-1],
@@ -174,9 +187,8 @@ def plot_cyclones_on_map(date, ax, config, cyclone):
                     time_unk_points, lon_unk_points, lat_unk_points = get_times_and_positions_for_unknown_points(df, df_k)
                     lons, lats = get_lat_lon_for_cyclone(df_k)
                     sizes = get_sizes_for_cyclone(df_k)
-                    colors, edgecolors = get_colors_for_cyclone(df_k, cyclone, date, number, sizes, lons, lats)
+                    ci = get_current_index(df_k, date)
                     ax.plot(lons, lats, 'k-', transform=ccrs.PlateCarree())
-                    ax.scatter(lons, lats, c=colors, edgecolors=edgecolors, s=sizes,
-                               transform=ccrs.PlateCarree(), zorder=10)
+                    plot_cyclone_points(ax, ci, lons, lats, sizes, cyclone, number)
                     plot_unknown_point(ax, d1, time_unk_points, lon_unk_points, lat_unk_points, cyclone, number)
                     add_cyclone_info(ax, df, lons, lats)
