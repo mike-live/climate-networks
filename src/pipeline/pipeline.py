@@ -97,7 +97,7 @@ def plot_metrics(config):
                 plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
 
     elif config.plotting_mode['cyclones'] and config.plotting_mode['metrics'] == False:
-        cyclones = get_cyclones(config)
+        cyclones = get_cyclones(config.cyclones_plot_options)
         cyclones_dir = create_dir(config)
         for cyclone in tqdm(cyclones):
             print('\ncyclone:', cyclone)

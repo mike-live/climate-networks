@@ -51,14 +51,14 @@ def get_cyclones_for_special_date(frame, date):
     return sub_frame
 
 
-def get_cyclones(config):
-    start_date = datetime.strptime(config.cyclones_plot_options['start_time'], '%Y.%m.%d %H:%M:%S')
-    end_date = datetime.strptime(config.cyclones_plot_options['end_time'], '%Y.%m.%d %H:%M:%S')
+def get_cyclones(config_options):
+    start_date = datetime.strptime(config_options['start_time'], '%Y.%m.%d %H:%M:%S')
+    end_date = datetime.strptime(config_options['end_time'], '%Y.%m.%d %H:%M:%S')
 
     cyclones = []
     current_date = start_date
     for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
-        frame = read_cyclones_file(config.cyclones_plot_options['cyclones_file_name'], str(year))
+        frame = read_cyclones_file(config_options['cyclones_file_name'], str(year))
         while current_date <= end_date:
             sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
             if not sub_frame.empty:
