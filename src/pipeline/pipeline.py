@@ -117,7 +117,21 @@ def plot_metrics(config):
 
 
 def compute_all_time_local_metrics(config):
-    pass
+    from corr_network import load_data, get_available_mask
+    from metric_store import get_metric_names, load_metric
+    from network_metrics import prepare_metric
+    from all_time_local_metrics import compute_mean_std
+    from tqdm import tqdm
+
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+    metric_names = get_metric_names(config)
+    for metric_name in tqdm(metric_names):
+        metric = load_metric(config, metric_name)
+        metric = prepare_metric(metric_name, metric, available_mask)
+        if config.metric_dimension[metric_name] == '2D':
+            print(metric_name, metric.shape)
+            compute_mean_std(config, metric_name, metric)
 
 
 def parse_args():
