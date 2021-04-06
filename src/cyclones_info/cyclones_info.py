@@ -176,3 +176,10 @@ def get_datetimes_for_cycline_points(df):
             ct = datetime.strptime(row['Date (DD/MM/YYYY)'] + ' ' + row['Time (UTC)'], '%d/%m/%Y %H%M')
             date_times.append(ct.strftime('%Y.%m.%d %H:%M:%S'))
     return date_times
+
+
+def create_cyclone_info_string(cyclone):
+    info_str = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_' + cyclone['name'] + '_'\
+           + datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
+           + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
+    return info_str
