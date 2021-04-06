@@ -4,7 +4,8 @@ import os
 print(os.getcwd())
 
 correlations = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    #'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
     'input_file_name': 'resulting_cube_land_masked_after_preproc_ERA5_MSLP_1982_2019_3h_0.75.npz',
     'input_var_name': 'arr_0',
     'output_correlation_file_name': 'corr_online_land_masked_after_preproc_ERA5_MSLP_1982_2019_3h_0.75_window_10d_delay_0d.npy',
@@ -39,7 +40,7 @@ diff_metrics = {
 }
 
 download_ERA5_options = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
     'lat_file_name': 'lat.txt',
     'lon_file_name': 'lon.txt',
     'times_file_name': 'times.txt',
@@ -90,9 +91,17 @@ metrics_plot_options = {
 cyclones_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'images_dir': 'cyclones',
-    'start_time': '2019.01.01 00:00:00',
-    'end_time': '2020.01.01 00:00:00',
-    'n_3h_intervals_before_after': 16,
+    'start_time': '1982.11.27 00:00:00',
+    'end_time': '1982.11.30 00:00:00',
+    'n_3h_intervals_before_after': 5,
+    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
+}
+
+local_metrics_options = {
+    'work_dir': download_ERA5_options['work_dir'],
+    'output_metrics_dir': 'all_time_local_metrics',
+    'start_time': '1982.11.27 00:00:00',
+    'end_time': '1982.11.30 00:00:00',
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
