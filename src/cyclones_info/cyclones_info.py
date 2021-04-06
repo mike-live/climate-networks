@@ -48,7 +48,7 @@ def get_cyclones_for_special_date(frame, date):
     sub_frame = frame[frame['Serial Number of system during year'].isin(serial_numbers)]
     sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '')]
     sub_frame.index = range(0, len(sub_frame))
-    return
+    return sub_frame
 
 
 def get_cyclones(config):
