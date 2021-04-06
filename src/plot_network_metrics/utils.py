@@ -1,42 +1,4 @@
 from datetime import timedelta, datetime
-import pandas as pd
-import numpy as np
-
-
-def is_float(st):
-    try:
-        float(st)
-        return True
-    except ValueError:
-        return False
-
-
-def delete_empty_rows(frame):
-    new_frame = frame.copy()
-    for ind, row in frame.iterrows():
-        if new_frame.loc[ind].isna().values.all():
-            new_frame.drop([ind], inplace=True)
-    new_frame.index = range(0, len(new_frame))
-    return new_frame
-
-
-def convert_time_in_cyclone_frame(frame):
-    new_frame = frame.copy()
-    new_frame['Time (UTC)'] = new_frame['Time (UTC)'].apply(lambda x:
-                                                            '' if x == ''
-                                                            else (x.zfill(4)
-                                                                  if type(x) is str
-                                                                  else ('' if np.isnan(x)
-                                                                        else '{:04d}'.format(int(x)))))
-    return new_frame
-
-
-def read_cyclones_file(file_name, sheet_name):
-    frame = pd.read_excel(file_name, sheet_name=sheet_name)
-    frame = delete_empty_rows(frame)
-    frame = convert_time_in_cyclone_frame(frame)
-    frame.fillna('', inplace=True)
-    return frame
 
 
 def get_considered_years(config):
@@ -73,13 +35,6 @@ def get_considered_times_for_cyclone(cyclone, config):
         d += delta
 
     return considered_times
-
-
-def update_config_for_plot_cyclone(config, cyclone):
-    config.metrics_plot_options['start_time'] = cyclone['start']
-    config.metrics_plot_options['end_time'] = cyclone['end']
-    config.metrics_plot_options['time_split'] = None
-    config.metrics_plot_options['plot_cyclones'] = True
 
 
 def get_run_time_images_dir_name_for_metrics(config):
