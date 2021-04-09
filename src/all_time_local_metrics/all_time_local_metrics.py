@@ -1,37 +1,22 @@
 import numpy as np
-from datetime import datetime
-from plot_network_metrics.plot_cyclones import get_cyclones, get_only_known_data, get_lat_lon_for_cyclone
-from plot_network_metrics.utils import read_cyclones_file
+from cyclones_info.cyclones_info import read_cyclones_file, get_cyclones, get_only_known_data, get_lat_lon_for_cyclone, \
+    create_cyclone_info_string, get_datetimes_for_cycline_points
 
 
-def get_datetimes_for_cycline_points(df):
-    date_times = []
-    for ind, row in df.iterrows():
-        if row['Date (DD/MM/YYYY)'] != '' and row['Time (UTC)'] != '':
-            ct = datetime.strptime(row['Date (DD/MM/YYYY)'] + ' ' + row['Time (UTC)'], '%d/%m/%Y %H%M')
-            date_times.append(ct.strftime('%Y.%m.%d %H:%M:%S'))
-    return date_times
+def add_local_info_for_cyclone(cyclone, local_metric_means_stds, date_times, cyclone_metric, means, stds):
+    local_metric_means_stds.append([create_cyclone_info_string(cyclone)])
+    local_metric_means_stds.append(['times'])
+    local_metric_means_stds.append(date_times)
+    local_metric_means_stds.append(['metrics'])
+    local_metric_means_stds.append(cyclone_metric)
+    local_metric_means_stds.append(['means'])
+    local_metric_means_stds.append(means)
+    local_metric_means_stds.append(['stds'])
+    local_metric_means_stds.append(stds)
+    return local_metric_means_stds
 
 
-def create_cyclone_name(cyclone):
-    name = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_' + cyclone['name'] + '_'\
-           + datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
-           + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
-    return name
-
-
-def add_local_metrics_means_stds(cyclone, local_metrics_means_stds, cyclone_metric, means, stds):
-    local_metrics_means_stds.append(create_cyclone_name(cyclone))
-    local_metrics_means_stds.append(['metrics'])
-    local_metrics_means_stds.append(cyclone_metric)
-    local_metrics_means_stds.append(['means'])
-    local_metrics_means_stds.append(means)
-    local_metrics_means_stds.append(['stds'])
-    local_metrics_means_stds.append(stds)
-    return local_metrics_means_stds
-
-
-def compute_mean_std(config, metric_name, metric):
+def compute_mean_std(config, metric):
     # metric - 3D np.ndarray (lat, lon, time)
 
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
@@ -41,11 +26,11 @@ def compute_mean_std(config, metric_name, metric):
     file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
     all_lon = np.loadtxt(file_name, dtype='float', delimiter='\n')
 
-    local_metrics_means_stds = []
+    local_metric_means_stds = []
 
-    cyclones = get_cyclones(config.local_metrics_options) ##############
+    cyclones = get_cyclones(config.local_grid_metrics_options)
     for cyclone in cyclones:
-        frame = read_cyclones_file(config.local_metrics_options['cyclones_file_name'], cyclone['start'][0:4])
+        frame = read_cyclones_file(config.local_grid_metrics_options['cyclones_file_name'], cyclone['start'][0:4])
         cyclone_frame = frame[(frame['Serial Number of system during year'] == cyclone['number']) &
                               ~(frame['Date (DD/MM/YYYY)'] == '') & ~(frame['Time (UTC)'] == '')]
         cyclone_frame = get_only_known_data(cyclone_frame)
@@ -63,18 +48,17 @@ def compute_mean_std(config, metric_name, metric):
 
             cyclone_metric.append(metric[ind_lat, ind_lon, ind_dt])
 
-            #print(current_date_time, '->', ind_dt)
-            #print(current_lat, '->', ind_lat, '->', all_lat[ind_lat], '\t', current_lon, '->', ind_lon, '->', all_lon[ind_lon])
+            metric_for_grid_point = metric[ind_lat, ind_lon, :]
+            if np.all(np.isnan(metric_for_grid_point)):
+                means.append(np.nan)
+                stds.append(np.nan)
+            else:
+                means.append(np.nanmean(metric_for_grid_point))
+                stds.append(np.nanstd(metric_for_grid_point, ddof=1))
 
-            means.append(np.nanmean(metric[ind_lat, ind_lon, :]))
-            stds.append(np.nanstd(metric[ind_lat, ind_lon, :], ddof=1))
+        local_metric_means_stds = add_local_info_for_cyclone(cyclone, local_metric_means_stds, date_times,
+                                                             cyclone_metric, means, stds)
 
-        #print('\n')
+    local_metric_means_stds = np.asarray(local_metric_means_stds, dtype=object)
 
-        local_metrics_means_stds = add_local_metrics_means_stds(cyclone, local_metrics_means_stds,
-                                                                cyclone_metric, means, stds)
-
-    with open('djdjsj.txt', 'w') as file_handler:
-        for item in local_metrics_means_stds:
-            file_handler.write("{}\n".format(item))
-
+    return local_metric_means_stds
