@@ -93,15 +93,15 @@ cyclones_plot_options = {
     'images_dir': 'cyclones',
     'start_time': '1982.11.27 00:00:00',
     'end_time': '1982.11.30 00:00:00',
-    'n_3h_intervals_before_after': 5,
+    'n_3h_intervals_before_after': 16,
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
-local_metrics_options = {
+local_grid_metrics_options = {
     'work_dir': download_ERA5_options['work_dir'],
-    'output_metrics_dir': 'all_time_local_metrics',
-    'start_time': '1982.11.27 00:00:00',
-    'end_time': '1982.11.30 00:00:00',
+    'output_local_metrics_dir': Path('local_grid_metrics_for_cyclones'),
+    'start_time': '1982.01.01 00:00:00',
+    'end_time': '2019.12.31 21:00:00',
     'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
