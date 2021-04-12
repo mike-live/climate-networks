@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import timedelta, datetime
 
 
-def is_float(st):
+def check_is_number(st):
     try:
         float(st)
         return True
@@ -21,17 +21,20 @@ def delete_empty_rows(frame):
 
 
 def convert_time_in_cyclone_frame(frame):
+    def convert_time_format(x):
+        if x == '' or np.isnan(x):
+            res = ''
+        elif type(x) is str:
+            res = x.zfill(4)
+        else:
+            res = '{:04d}'.format(int(x))
+        return res
     new_frame = frame.copy()
-    new_frame['Time (UTC)'] = new_frame['Time (UTC)'].apply(lambda x:
-                                                            '' if x == ''
-                                                            else (x.zfill(4)
-                                                                  if type(x) is str
-                                                                  else ('' if np.isnan(x)
-                                                                        else '{:04d}'.format(int(x)))))
+    new_frame['Time (UTC)'] = new_frame['Time (UTC)'].apply(convert_time_format)
     return new_frame
 
 
-def read_cyclones_file(file_name, sheet_name):
+def get_cyclones_info(file_name, sheet_name):
     frame = pd.read_excel(file_name, sheet_name=sheet_name)
     frame = delete_empty_rows(frame)
     frame = convert_time_in_cyclone_frame(frame)
@@ -58,7 +61,7 @@ def get_cyclones(config_options):
     cyclones = []
     current_date = start_date
     for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
-        frame = read_cyclones_file(config_options['cyclones_file_name'], str(year))
+        frame = get_cyclones_info(config_options['cyclones_file_name'], str(year))
         while current_date <= end_date:
             sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
             if not sub_frame.empty:
@@ -81,8 +84,8 @@ def get_cyclones(config_options):
 
 
 def get_only_known_data(frame):
-    l1 = list(map(is_float, frame['Longitude (lon.)'].values))
-    l2 = list(map(is_float, frame['Latitude (lat.)'].values))
+    l1 = list(map(check_is_number, frame['Longitude (lon.)'].values))
+    l2 = list(map(check_is_number, frame['Latitude (lat.)'].values))
     mask = [a and b for a, b in zip(l1, l2)]
     sub_frame = frame[mask]
     sub_frame.index = range(0, len(sub_frame))
@@ -95,18 +98,18 @@ def get_times_and_positions_for_unknown_points(df, df_k):
     lats = []
     d1 = datetime.strptime(df_k['Date (DD/MM/YYYY)'][0] + ' ' + df_k['Time (UTC)'][0], '%d/%m/%Y %H%M')
     for k in range(0, len(df)):
-        if not (is_float(df['Longitude (lon.)'][k]) and is_float(df['Latitude (lat.)'][k])):
+        if not (check_is_number(df['Longitude (lon.)'][k]) and check_is_number(df['Latitude (lat.)'][k])):
             d2 = datetime.strptime(df['Date (DD/MM/YYYY)'][k] + ' ' + df['Time (UTC)'][k], '%d/%m/%Y %H%M')
             times.append(d2)
             if d2 < d1:
                 for i in range(k+1, len(df)):
-                    if is_float(df['Longitude (lon.)'][i]) and is_float(df['Latitude (lat.)'][i]):
+                    if check_is_number(df['Longitude (lon.)'][i]) and check_is_number(df['Latitude (lat.)'][i]):
                         lons.append(float(df['Longitude (lon.)'][i]))
                         lats.append(float(df['Latitude (lat.)'][i]))
                         break
             else:
                 for i in range(k-1, -1, -1):
-                    if is_float(df['Longitude (lon.)'][i]) and is_float(df['Latitude (lat.)'][i]):
+                    if check_is_number(df['Longitude (lon.)'][i]) and check_is_number(df['Latitude (lat.)'][i]):
                         lons.append(float(df['Longitude (lon.)'][i]))
                         lats.append(float(df['Latitude (lat.)'][i]))
                         break
@@ -169,7 +172,7 @@ def update_config_for_plot_cyclone(config, cyclone):
     config.metrics_plot_options['plot_cyclones'] = True
 
 
-def get_datetimes_for_cycline_points(df):
+def get_datetimes_for_cyclone_points(df):
     date_times = []
     for ind, row in df.iterrows():
         if row['Date (DD/MM/YYYY)'] != '' and row['Time (UTC)'] != '':
