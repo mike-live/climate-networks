@@ -54,6 +54,13 @@ def get_cyclones_for_special_date(frame, date):
     return sub_frame
 
 
+def get_cyclone_for_special_number(frame, number):
+    sub_frame = frame[(frame['Serial Number of system during year'] == number) &
+                      ~(frame['Date (DD/MM/YYYY)'] == '') & ~(frame['Time (UTC)'] == '')]
+    sub_frame.index = range(0, len(sub_frame))
+    return sub_frame
+
+
 def get_cyclones(config_options):
     start_date = datetime.strptime(config_options['start_time'], '%Y.%m.%d %H:%M:%S')
     end_date = datetime.strptime(config_options['end_time'], '%Y.%m.%d %H:%M:%S')

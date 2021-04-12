@@ -1,6 +1,6 @@
 import numpy as np
 from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones, get_only_known_data, get_lat_lon_for_cyclone, \
-    create_cyclone_info_string, get_datetimes_for_cyclone_points
+    create_cyclone_info_string, get_datetimes_for_cyclone_points, get_cyclone_for_special_number
 
 
 def add_local_info_for_cyclone(cyclone, local_metric_means_stds, date_times, cyclone_metric, means, stds):
@@ -31,10 +31,8 @@ def compute_mean_std(config, metric):
     cyclones = get_cyclones(config.cyclone_metrics_options)
     for cyclone in cyclones:
         frame = get_cyclones_info(config.cyclone_metrics_options['cyclones_file_name'], cyclone['start'][0:4])
-        cyclone_frame = frame[(frame['Serial Number of system during year'] == cyclone['number']) &
-                              ~(frame['Date (DD/MM/YYYY)'] == '') & ~(frame['Time (UTC)'] == '')]
+        cyclone_frame = get_cyclone_for_special_number(frame, cyclone['number'])
         cyclone_frame = get_only_known_data(cyclone_frame)
-
         lons, lats = get_lat_lon_for_cyclone(cyclone_frame)
         date_times = get_datetimes_for_cyclone_points(cyclone_frame)
 
