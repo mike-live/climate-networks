@@ -101,7 +101,7 @@ cyclones_plot_options = {
     'n_3h_intervals_before_after': 16,
 }
 
-local_grid_metrics_options = {
+cyclone_metrics_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'output_local_metrics_dir': Path('local_grid_metrics_for_cyclones'),

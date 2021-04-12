@@ -1,6 +1,6 @@
 import cartopy.crs as ccrs
 from datetime import timedelta, datetime
-from cyclones_info.cyclones_info import read_cyclones_file, get_cyclones_for_special_date, extension_df_for_cyclone, \
+from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones_for_special_date, extension_df_for_cyclone, \
     get_only_known_data, get_times_and_positions_for_unknown_points, get_lat_lon_for_cyclone, get_sizes_for_cyclone
 
 
@@ -45,7 +45,7 @@ def add_cyclone_info(ax, df, lons, lats):
 
 def plot_cyclones_on_map(date, ax, config, cyclone):
     sheet_name = date[0:4]
-    frame = read_cyclones_file(config.metrics_plot_options['cyclones_file_name'], sheet_name)
+    frame = get_cyclones_info(config.metrics_plot_options['cyclones_file_name'], sheet_name)
     sub_frame = get_cyclones_for_special_date(frame, date)
     if not sub_frame.empty:
         unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))

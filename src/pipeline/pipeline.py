@@ -116,11 +116,11 @@ def plot_metrics(config):
                     plot_1d_metric_from_time(metric, considered_times, config, cyclone_metric_dir)
 
 
-def compute_all_time_local_metrics(config):
+def compute_cyclone_metrics(config):
     from corr_network import load_data, get_available_mask
     from metric_store import get_metric_names, save_metric, load_metric
     from network_metrics import prepare_metric
-    from all_time_local_metrics import compute_mean_std
+    from cyclone_metrics import compute_mean_std
     from tqdm import tqdm
 
     data = load_data(config)
@@ -133,7 +133,7 @@ def compute_all_time_local_metrics(config):
             print(metric_name, metric.shape)
             local_metric_means_stds = compute_mean_std(config, metric)
             save_metric(config, local_metric_means_stds,
-                        "/".join((config.local_grid_metrics_options['output_local_metrics_dir'] / metric_name).parts))
+                        "/".join((config.cyclone_metrics_options['output_local_metrics_dir'] / metric_name).parts))
 
 
 def parse_args():
@@ -160,9 +160,9 @@ def parse_args():
                     const=True, default=False,
                     help='plot network metrics')
 
-    parser.add_argument('--compute_all_time_local_metrics', dest='need_all_time_local_metrics', action='store_const',
+    parser.add_argument('--compute_cyclone_metrics', dest='need_cyclone_metrics', action='store_const',
                     const=True, default=False,
-                    help='compute all time local metrics')
+                    help='compute cyclone metrics')
 
     args = parser.parse_args()
     return args
@@ -189,5 +189,5 @@ def main():
     if args.need_plot:
         plot_metrics(config)
 
-    if args.need_all_time_local_metrics:
-        compute_all_time_local_metrics(config)
+    if args.need_cyclone_metrics:
+        compute_cyclone_metrics(config)

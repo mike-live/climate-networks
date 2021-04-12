@@ -1,6 +1,6 @@
 import numpy as np
-from cyclones_info.cyclones_info import read_cyclones_file, get_cyclones, get_only_known_data, get_lat_lon_for_cyclone, \
-    create_cyclone_info_string, get_datetimes_for_cycline_points
+from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones, get_only_known_data, get_lat_lon_for_cyclone, \
+    create_cyclone_info_string, get_datetimes_for_cyclone_points
 
 
 def add_local_info_for_cyclone(cyclone, local_metric_means_stds, date_times, cyclone_metric, means, stds):
@@ -28,15 +28,15 @@ def compute_mean_std(config, metric):
 
     local_metric_means_stds = []
 
-    cyclones = get_cyclones(config.local_grid_metrics_options)
+    cyclones = get_cyclones(config.cyclone_metrics_options)
     for cyclone in cyclones:
-        frame = read_cyclones_file(config.local_grid_metrics_options['cyclones_file_name'], cyclone['start'][0:4])
+        frame = get_cyclones_info(config.cyclone_metrics_options['cyclones_file_name'], cyclone['start'][0:4])
         cyclone_frame = frame[(frame['Serial Number of system during year'] == cyclone['number']) &
                               ~(frame['Date (DD/MM/YYYY)'] == '') & ~(frame['Time (UTC)'] == '')]
         cyclone_frame = get_only_known_data(cyclone_frame)
 
         lons, lats = get_lat_lon_for_cyclone(cyclone_frame)
-        date_times = get_datetimes_for_cycline_points(cyclone_frame)
+        date_times = get_datetimes_for_cyclone_points(cyclone_frame)
 
         cyclone_metric = []
         means = []
