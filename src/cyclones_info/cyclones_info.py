@@ -11,35 +11,10 @@ def check_is_number(st):
         return False
 
 
-def delete_empty_rows(frame):
-    new_frame = frame.copy()
-    for ind, row in frame.iterrows():
-        if new_frame.loc[ind].isna().values.all():
-            new_frame.drop([ind], inplace=True)
-    new_frame.index = range(0, len(new_frame))
-    return new_frame
-
-
-def convert_time_in_cyclone_frame(frame):
-    def convert_time_format(x):
-        if x == '' or np.isnan(x):
-            res = ''
-        elif type(x) is str:
-            res = x.zfill(4)
-        else:
-            res = '{:04d}'.format(int(x))
-        return res
-    new_frame = frame.copy()
-    new_frame['Time (UTC)'] = new_frame['Time (UTC)'].apply(convert_time_format)
-    return new_frame
-
-
-def get_cyclones_info(file_name, sheet_name):
-    frame = pd.read_excel(file_name, sheet_name=sheet_name)
-    frame = delete_empty_rows(frame)
-    frame = convert_time_in_cyclone_frame(frame)
-    frame.fillna('', inplace=True)
-    return frame
+def get_cyclones_info(config):
+    cyclones_frame = pd.read_csv(config.cyclones_info['cyclones_file_name'], sep='\t', dtype={'Time (UTC)': str})
+    cyclones_frame.fillna('', inplace=True)
+    return cyclones_frame
 
 
 def get_cyclones_for_special_date(frame, date):
@@ -47,7 +22,7 @@ def get_cyclones_for_special_date(frame, date):
     row = frame[frame['Date (DD/MM/YYYY)'] == d]
     if row.empty:
         return row
-    serial_numbers = list(map(int, set(row['Serial Number of system during year'])))
+    serial_numbers = list(set(row['Serial Number of system during year']))
     sub_frame = frame[frame['Serial Number of system during year'].isin(serial_numbers)]
     sub_frame = sub_frame[~(sub_frame['Date (DD/MM/YYYY)'] == '') & ~(sub_frame['Time (UTC)'] == '')]
     sub_frame.index = range(0, len(sub_frame))
@@ -61,32 +36,21 @@ def get_cyclone_for_special_number(frame, number):
     return sub_frame
 
 
-def get_cyclones(config_options):
-    start_date = datetime.strptime(config_options['start_time'], '%Y.%m.%d %H:%M:%S')
-    end_date = datetime.strptime(config_options['end_time'], '%Y.%m.%d %H:%M:%S')
-
+def get_cyclones(cyclones_frame, options):
+    start_date = datetime.strptime(options['start_time'], '%Y.%m.%d %H:%M:%S')
+    end_date = datetime.strptime(options['end_time'], '%Y.%m.%d %H:%M:%S')
+    cyclones_frame['dates'] = pd.to_datetime(cyclones_frame['Date (DD/MM/YYYY)'], format='%d/%m/%Y')
+    numbers = cyclones_frame[(cyclones_frame['dates'] >= start_date) &
+                             (cyclones_frame['dates'] <= end_date)]['Serial Number of system during year'].values
+    ready_numbers = []
     cyclones = []
-    current_date = start_date
-    for year in range(int(start_date.strftime('%Y')), int(end_date.strftime('%Y')) + 1):
-        frame = get_cyclones_info(config_options['cyclones_file_name'], str(year))
-        while current_date <= end_date:
-            sub_frame = get_cyclones_for_special_date(frame, current_date.strftime('%Y.%m.%d %H:%M:%S'))
-            if not sub_frame.empty:
-                unique_serial_numbers = sorted(list(set(sub_frame['Serial Number of system during year'])))
-                for number in unique_serial_numbers:
-                    df = sub_frame[sub_frame['Serial Number of system during year'] == number]
-                    df.index = range(0, len(df))
-                    cyclone = get_current_cyclone_dict(df)
-                    if cyclone not in cyclones:
-                        cyclones.append(cyclone)
-                if number + 1 in frame['Serial Number of system during year'].values:
-                    df = frame[frame['Serial Number of system during year'] == number + 1]
-                    current_date = datetime.strptime(df['Date (DD/MM/YYYY)'].values[0], '%d/%m/%Y')
-                else:
-                    current_date = datetime(year=year+1, month=1, day=1)
-                    break
-            else:
-                current_date += timedelta(days=1)
+    for cn in numbers:
+        if cn not in ready_numbers:
+            ready_numbers.append(cn)
+            df = get_cyclone_for_special_number(cyclones_frame, cn)
+            df.index = range(0, len(df))
+            cyclone = get_current_cyclone_dict(df)
+            cyclones.append(cyclone)
     return cyclones
 
 
@@ -167,7 +131,7 @@ def get_current_cyclone_dict(df):
                                          + df['Time (UTC)'][0], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
     cyclone['end'] = datetime.strptime(df['Date (DD/MM/YYYY)'][len(df)-1] + ' '
                                        + df['Time (UTC)'][len(df)-1], '%d/%m/%Y %H%M').strftime('%Y.%m.%d %H:%M:%S')
-    cyclone['number'] = int(list(set(df['Serial Number of system during year']))[0])
+    cyclone['number'] = list(set(df['Serial Number of system during year']))[0]
     cyclone['name'] = df['Name'][0]
     return cyclone
 
@@ -189,7 +153,7 @@ def get_datetimes_for_cyclone_points(df):
 
 
 def create_cyclone_info_string(cyclone):
-    info_str = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_' + cyclone['name'] + '_'\
+    info_str = str(cyclone['start'][0:4]) + '_cyclone_' + cyclone['number'].split('_')[0] + '_' + cyclone['name'] + '_'\
            + datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
            + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
     return info_str
