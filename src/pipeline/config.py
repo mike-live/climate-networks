@@ -69,7 +69,7 @@ download_ERA5_options = {
 }
 
 cyclones_info = {
-    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls'
+    'cyclones_file_name': 'tropical_cyclones_data_1982_2020.csv',
 }
 
 plotting_mode = {
