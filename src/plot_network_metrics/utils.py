@@ -1,4 +1,16 @@
+import numpy as np
 from datetime import timedelta, datetime
+
+
+def get_times_lats_lots(config):
+    # metric - 3D np.ndarray (lat, lon, time)
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
+    times = np.loadtxt(file_name, dtype='str', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
+    lats = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
+    lons = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    return times, lats, lons
 
 
 def get_considered_years(config):
@@ -70,7 +82,7 @@ def get_run_time_images_dir_name_for_cyclones(config):
 
 
 def create_cyclone_metric_dir(config, cyclone, images_dir):
-    dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_'
+    dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + cyclone['number'].split('_')[0] + '_'
     dir_name += datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
                 + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
     cyclone_metric_dir = images_dir / dir_name / config.metrics_plot_options['metric_name']
