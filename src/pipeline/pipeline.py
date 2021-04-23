@@ -73,11 +73,13 @@ def plot_metrics(config):
     from plot_network_metrics.plot_network_metrics import plot_2d_metric_on_map, plot_1d_metric_from_time
     from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, \
         get_considered_times, get_considered_times_for_cyclone
-    from cyclones_info.cyclones_info import get_cyclones, update_config_for_plot_cyclone
+    from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones, update_config_for_plot_cyclone
     from tqdm import tqdm
 
     data = load_data(config)
     available_mask = get_available_mask(data)
+
+    cyclones_frame = get_cyclones_info(config)
 
     if config.metrics_plot_options['metric_names'] is None:
         config.metrics_plot_options['metric_names'] = get_metric_names(config)
@@ -92,12 +94,12 @@ def plot_metrics(config):
             print(metric_name, metric.shape)
             if config.metric_dimension[metric_name] == '2D':
                 empty_dict = dict.fromkeys(['start', 'end', 'number', 'name'], '')
-                plot_2d_metric_on_map(metric, considered_times, config, metric_dir, empty_dict)
+                plot_2d_metric_on_map(metric, considered_times, config, metric_dir, cyclones_frame, empty_dict)
             elif config.metric_dimension[metric_name] == '1D':
                 plot_1d_metric_from_time(metric, considered_times, config, metric_dir)
 
     elif config.plotting_mode['cyclones'] and config.plotting_mode['metrics'] == False:
-        cyclones = get_cyclones(config.cyclones_plot_options)
+        cyclones = get_cyclones(cyclones_frame, config.cyclones_plot_options)
         cyclones_dir = create_dir(config)
         for cyclone in tqdm(cyclones):
             print('\ncyclone:', cyclone)
@@ -107,11 +109,10 @@ def plot_metrics(config):
                 config.metrics_plot_options['metric_name'] = metric_name
                 cyclone_metric_dir = create_cyclone_metric_dir(config, cyclone, cyclones_dir)
                 metric = load_metric(config, metric_name)
-                print(metric.shape)
                 metric = prepare_metric(metric_name, metric, available_mask)
-                print(metric.shape)
+                print(metric_name, metric.shape)
                 if config.metric_dimension[metric_name] == '2D':
-                    plot_2d_metric_on_map(metric, considered_times, config, cyclone_metric_dir, cyclone)
+                    plot_2d_metric_on_map(metric, considered_times, config, cyclone_metric_dir, cyclones_frame, cyclone)
                 elif config.metric_dimension[metric_name] == '1D':
                     plot_1d_metric_from_time(metric, considered_times, config, cyclone_metric_dir)
 
@@ -120,20 +121,29 @@ def compute_cyclone_metrics(config):
     from corr_network import load_data, get_available_mask
     from metric_store import get_metric_names, save_metric, load_metric
     from network_metrics import prepare_metric
+    from plot_network_metrics.utils import get_times_lats_lots  ###
+    from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones
     from cyclone_metrics import compute_mean_std
     from tqdm import tqdm
+
+    all_times, all_lats, all_lons = get_times_lats_lots(config)
+    cyclones_frame = get_cyclones_info(config)
+    cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
 
     data = load_data(config)
     available_mask = get_available_mask(data)
     metric_names = get_metric_names(config)
+
     for metric_name in tqdm(metric_names):
         metric = load_metric(config, metric_name)
         metric = prepare_metric(metric_name, metric, available_mask)
         if config.metric_dimension[metric_name] == '2D':
             print(metric_name, metric.shape)
-            local_metric_means_stds = compute_mean_std(config, metric)
-            save_metric(config, local_metric_means_stds,
-                        "/".join((config.cyclone_metrics_options['output_local_metrics_dir'] / metric_name).parts))
+            local_metric_means_stds = compute_mean_std(metric, cyclones_dict, cyclones_frame,
+                                                       all_times, all_lons, all_lats)
+            path_to_file = "/".join((config.cyclone_metrics_options['output_local_metrics_dir'] / metric_name).parts)
+            save_metric(config, local_metric_means_stds, path_to_file)
+            #local_metric_means_stds = load_metric(config, path_to_file)
 
 
 def parse_args():
