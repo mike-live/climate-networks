@@ -1,42 +1,16 @@
-from datetime import timedelta, datetime
-import pandas as pd
 import numpy as np
+from datetime import timedelta, datetime
 
 
-def is_float(st):
-    try:
-        float(st)
-        return True
-    except ValueError:
-        return False
-
-
-def delete_empty_rows(frame):
-    new_frame = frame.copy()
-    for ind, row in frame.iterrows():
-        if new_frame.loc[ind].isna().values.all():
-            new_frame.drop([ind], inplace=True)
-    new_frame.index = range(0, len(new_frame))
-    return new_frame
-
-
-def convert_time_in_cyclone_frame(frame):
-    new_frame = frame.copy()
-    new_frame['Time (UTC)'] = new_frame['Time (UTC)'].apply(lambda x:
-                                                            '' if x == ''
-                                                            else (x.zfill(4)
-                                                                  if type(x) is str
-                                                                  else ('' if np.isnan(x)
-                                                                        else '{:04d}'.format(int(x)))))
-    return new_frame
-
-
-def read_cyclones_file(file_name, sheet_name):
-    frame = pd.read_excel(file_name, sheet_name=sheet_name)
-    frame = delete_empty_rows(frame)
-    frame = convert_time_in_cyclone_frame(frame)
-    frame.fillna('', inplace=True)
-    return frame
+def get_times_lats_lots(config):
+    # metric - 3D np.ndarray (lat, lon, time)
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
+    times = np.loadtxt(file_name, dtype='str', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
+    lats = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
+    lons = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    return times, lats, lons
 
 
 def get_considered_years(config):
@@ -75,13 +49,6 @@ def get_considered_times_for_cyclone(cyclone, config):
     return considered_times
 
 
-def update_config_for_plot_cyclone(config, cyclone):
-    config.metrics_plot_options['start_time'] = cyclone['start']
-    config.metrics_plot_options['end_time'] = cyclone['end']
-    config.metrics_plot_options['time_split'] = None
-    config.metrics_plot_options['plot_cyclones'] = True
-
-
 def get_run_time_images_dir_name_for_metrics(config):
     start_time_plot = datetime.strptime(config.metrics_plot_options['start_time'],
                                         '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
@@ -115,7 +82,7 @@ def get_run_time_images_dir_name_for_cyclones(config):
 
 
 def create_cyclone_metric_dir(config, cyclone, images_dir):
-    dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + str(cyclone['number']) + '_'
+    dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + cyclone['number'].split('_')[0] + '_'
     dir_name += datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
                 + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
     cyclone_metric_dir = images_dir / dir_name / config.metrics_plot_options['metric_name']

@@ -4,7 +4,8 @@ import os
 print(os.getcwd())
 
 correlations = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    #'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
     'input_file_name': 'resulting_cube_land_masked_after_preproc_ERA5_MSLP_1982_2019_3h_0.75.npz',
     'input_var_name': 'arr_0',
     'output_correlation_file_name': 'corr_online_land_masked_after_preproc_ERA5_MSLP_1982_2019_3h_0.75_window_10d_delay_0d.npy',
@@ -39,7 +40,7 @@ diff_metrics = {
 }
 
 download_ERA5_options = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'work_dir': Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
     'lat_file_name': 'lat.txt',
     'lon_file_name': 'lon.txt',
     'times_file_name': 'times.txt',
@@ -67,6 +68,10 @@ download_ERA5_options = {
     'resolution': 0.75,
 }
 
+cyclones_info = {
+    'cyclones_file_name': 'tropical_cyclones_data_1982_2020.csv',
+}
+
 plotting_mode = {
     'metrics': False,
     'cyclones': True,
@@ -74,6 +79,7 @@ plotting_mode = {
 
 metrics_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
+    'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'metric_name': 'LCC',
     'metric_names': None,
     'time_split': None,    # 'years', 'months', None
@@ -84,16 +90,23 @@ metrics_plot_options = {
     'dpi': 200,
     'scaling_by_selected_data': False,
     'plot_cyclones': True,
-    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
 }
 
 cyclones_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
+    'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'images_dir': 'cyclones',
-    'start_time': '2019.01.01 00:00:00',
-    'end_time': '2020.01.01 00:00:00',
+    'start_time': '1982.11.27 00:00:00',
+    'end_time': '1982.11.30 00:00:00',
     'n_3h_intervals_before_after': 16,
-    'cyclones_file_name': 'best_track_ecscsuc_2020_m.xls',
+}
+
+cyclone_metrics_options = {
+    'work_dir': download_ERA5_options['work_dir'],
+    'cyclones_file_name': cyclones_info['cyclones_file_name'],
+    'output_local_metrics_dir': Path('local_grid_metrics_for_cyclones'),
+    'start_time': '1982.01.01 00:00:00',
+    'end_time': '2019.12.31 21:00:00',
 }
 
 metric_dimension = {

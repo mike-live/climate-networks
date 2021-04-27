@@ -66,15 +66,10 @@ def get_boundary_coordinates(config):
     return west, east, south, north
 
 
-def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone):
+def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclones_frame, cyclone):
     # metric - 3D np.ndarray (lat, lon, time)
 
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['times_file_name']
-    times = np.loadtxt(file_name, dtype='str', delimiter='\n')
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lat_file_name']
-    lat = np.loadtxt(file_name, dtype='float', delimiter='\n')
-    file_name = config.download_ERA5_options['work_dir'] / config.download_ERA5_options['lon_file_name']
-    lon = np.loadtxt(file_name, dtype='float', delimiter='\n')
+    times, lat, lon = utils.get_times_lats_lots(config)
 
     vmin, vmax = get_vmin_vmax(config, metric, considered_times, times)
     metric = set_vmin_vmax(metric, vmin, vmax)
@@ -104,7 +99,7 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclone):
         ax.yaxis.set_major_formatter(LatitudeFormatter())
         
         if config.metrics_plot_options['plot_cyclones']:
-            plot_cyclones.plot_cyclones_on_map(t, ax, config, cyclone)
+            plot_cyclones.plot_cyclones_on_map(t, ax, config, cyclones_frame, cyclone)
         
         t_form = datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d-%b-%Y-%H-%M-%S')
         ind = str(considered_times.index(t) + 1)
