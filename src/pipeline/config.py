@@ -1,5 +1,5 @@
 from pathlib2 import Path
-from config_project import project_data_dir
+from .config_project import project_data_dir
 
 download_ERA5_options = {
     'work_dir': project_data_dir / Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
