@@ -80,12 +80,16 @@ def get_run_time_images_dir_name_for_cyclones(config):
     run_time_dir_name = ''
     return run_time_dir_name
 
-
-def create_cyclone_metric_dir(config, cyclone, images_dir):
+def create_cyclone_dir(config, cyclone, images_dir):
     dir_name = str(cyclone['start'][0:4]) + '_cyclone_' + cyclone['number'].split('_')[0] + '_'
     dir_name += datetime.strptime(cyclone['start'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d') + '_' \
                 + datetime.strptime(cyclone['end'], '%Y.%m.%d %H:%M:%S').strftime('%Y-%m-%d')
-    cyclone_metric_dir = images_dir / dir_name / config.metrics_plot_options['metric_name']
+    cyclone_metric_dir = images_dir / dir_name
+    return cyclone_metric_dir
+
+
+def create_cyclone_metric_dir(config, cyclone, images_dir):
+    cyclone_metric_dir = create_cyclone_dir(config, cyclone, images_dir) / config.metrics_plot_options['metric_name']
     cyclone_metric_dir.mkdir(parents=True, exist_ok=True)
     return cyclone_metric_dir
 
