@@ -54,6 +54,7 @@ network_metrics = {
     'num_threads': 84,
     'work_dir': correlations['work_dir'] / metrics['output_metrics_dir'],
     'output_network_metrics_dir': Path('network_metrics'),
+    'corr_thrs': [None, 0.9, 0.95],
 }
 
 diff_metrics = {
