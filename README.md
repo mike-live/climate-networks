@@ -5,19 +5,19 @@
 You need install Python version 3.8 or higher.  
 
 Dependencies:  
-cartopy  
-cdsapi  
-cv2  
-dateutil  
-global_land_mask  
-matplotlib  
-numba  
-numpy  
-pathlib2  
-pandas  
-scipy  
-tqdm  
-xarray
+1. cartopy  
+2. cdsapi  
+3. cv2  
+4. dateutil  
+5. global_land_mask  
+6. matplotlib  
+7. numba  
+8. numpy  
+9. pathlib2  
+10. pandas  
+11. scipy  
+12. tqdm  
+13. xarray
 
 
 ## Getting started
@@ -40,14 +40,16 @@ xarray
 
 
 ## Available options
-*--compute_correlations*  
-*--compute_correlations_and_metrics*  
-*--compute_metrics*  
-*--compute_diff_metrics*  
-*--plot_metrics*  
-	There are two plotting modes available:  
-	a. plotting calculated 1D and 2D metrics  
-	b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics  
-*--compute_cyclone_metrics*  
-	Computation all-time local mean and std of metrics for each spatial grid cyclone point over time. It is necessary to plot the metric, mean metric and mean plus minus std versus time along the cyclone track. 
+
+	*--download*  
+	*--compute_correlations*  
+	*--compute_correlations_and_metrics*  
+	*--compute_metrics*  
+	*--compute_diff_metrics*  
+	*--plot_metrics*  
+		There are two plotting modes available:  
+			a. plotting calculated 1D and 2D metrics  
+			b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics  
+	*--compute_cyclone_metrics*  
+		Computation all-time local mean and std of metrics for each spatial grid cyclone point over time. It is necessary to plot the metric, mean metric and mean plus minus std versus time along the cyclone track. 
 	
