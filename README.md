@@ -41,15 +41,15 @@ Dependencies:
 
 ## Available options
 
-	*--download*  
-	*--compute_correlations*  
-	*--compute_correlations_and_metrics*  
-	*--compute_metrics*  
-	*--compute_diff_metrics*  
-	*--plot_metrics*  
-		There are two plotting modes available:  
-			a. plotting calculated 1D and 2D metrics  
-			b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics  
-	*--compute_cyclone_metrics*  
-		Computation all-time local mean and std of metrics for each spatial grid cyclone point over time. It is necessary to plot the metric, mean metric and mean plus minus std versus time along the cyclone track. 
+1. *--download*  
+2. *--compute_correlations*  
+3. *--compute_correlations_and_metrics*  
+4. *--compute_metrics*  
+5. *--compute_diff_metrics*  
+6. *--plot_metrics*  
+	There are two plotting modes available:  
+		a. plotting calculated 1D and 2D metrics  
+		b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics  
+7. *--compute_cyclone_metrics*  
+	Computation all-time local mean and std of metrics for each spatial grid cyclone point over time. It is necessary to plot the metric, mean metric and mean plus minus std versus time along the cyclone track. 
 	
