@@ -4,19 +4,19 @@
 
 You need install Python version 3.8 or higher.  
 
-Dependencies:
-cartopy
-cdsapi
-cv2
-dateutil
-global_land_mask
-matplotlib
-numba
-numpy
-pathlib2
-pandas
-scipy
-tqdm
+Dependencies:  
+cartopy  
+cdsapi  
+cv2  
+dateutil  
+global_land_mask  
+matplotlib  
+numba  
+numpy  
+pathlib2  
+pandas  
+scipy  
+tqdm  
 xarray
 
 
@@ -27,27 +27,27 @@ xarray
 2. [Login to CDS](https://cds.climate.copernicus.eu/user/login)
 3. Go to [this page](https://cds.climate.copernicus.eu/api-how-to) and copy the 2 line code displayed in the black box in the "Install the CDS API key" section
 4. Paste the 2 line code into a  %USERPROFILE%\.cdsapirc file, where in your windows environment, %USERPROFILE% is usually located at C:\Users\Username folder.
-5. Install the CDS API client by running the following command in a Command Prompt window:
-	`pip3 install cdsapi`
-	or
+5. Install the CDS API client by running the following command in a Command Prompt window:  
+	`pip3 install cdsapi`  
+	or  
 	`pip3 install --user cdsapi`
 6. Once the CDS API client is installed, you can use it to query data from datasets listed in the CDS catalogs. You should agree to the Terms of Use for all datasets you intend to download.
 
 **Step 2.** With our program you can download [ERA5 hourly data](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=overview) (mean sea level pressure or sea surface temperature) on single levels from 1979 to present from the CDS. ERA5 is the fifth generation ECMWF reanalysis for the global climate and weather. To download the required climate data, follow these steps:
 1. Update structure *download_ERA5_options* in *config.py* file as per your requirements.
-2. Run the program with parameter *--download*. To run from the command line use:
+2. Run the program with parameter *--download*. To run from the command line use:  
 	`python -m main --download`
 
 
 ## Available options
-1. *--compute_correlations*
-2. *--compute_correlations_and_metrics*
-3. *--compute_metrics*
-4. *--compute_diff_metrics*
-5. *--plot_metrics*
-	There are two plotting modes available:
-	a. plotting calculated 1D and 2D metrics
-	b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics
-6.	*--compute_cyclone_metrics*
+*--compute_correlations*  
+*--compute_correlations_and_metrics*  
+*--compute_metrics*  
+*--compute_diff_metrics*  
+*--plot_metrics*  
+	There are two plotting modes available:  
+	a. plotting calculated 1D and 2D metrics  
+	b. plotting tropical cyclones (*best_track_ecscsuc_2020_m.xls* file collected Regional Specialised Meteorological Centre) over metrics  
+*--compute_cyclone_metrics*  
 	Computation all-time local mean and std of metrics for each spatial grid cyclone point over time. It is necessary to plot the metric, mean metric and mean plus minus std versus time along the cyclone track. 
 	
