@@ -36,7 +36,7 @@ correlations = {
     'input_var_name': 'arr_0',
     'output_correlation_file_name': 'corr_online_' + 'land_masked_and_preproc' + '_window_10d_delay_0d.npy',
     'delay_time': 0,
-    'window_size': 80,
+    'window_size': 8 * 10,
     'num_threads': 85,
     'need_save': False,
     'num_parts': 666,
@@ -94,7 +94,7 @@ cyclones_plot_options = {
     'images_dir': 'cyclones',
     'start_time': '1982.11.27 00:00:00',
     'end_time': '1982.11.30 00:00:00',
-    'n_3h_intervals_before_after': 16,
+    'n_3h_intervals_before_after': 2 * 8, 
 }
 
 cyclone_metrics_options = {
