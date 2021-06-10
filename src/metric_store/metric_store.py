@@ -1,7 +1,13 @@
 import numpy as np
 
 def filter_by_prefix(metric_dict, prefix):
-    metric_dict = { metric_name: value for metric_name, value in metric_dict.items() if metric_name.startswith(prefix) }
+    if type(prefix) is str:
+        prefix = [prefix]
+    metric_dict = { 
+        metric_name: value 
+            for metric_name, value in metric_dict.items() 
+                if any(metric_name.startswith(pref) for pref in prefix)
+    }
     return metric_dict
 
 def add_metric(config, metric_name, metric_file_name):

@@ -9,7 +9,8 @@ def download_data(config):
     from metric_store import add_metric
     #from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
     #download_and_preprocessing_ERA5_data(config.download_ERA5_options)
-    add_metric(config, 'input_data/MSLP', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'])
+    add_metric(config, 'input_data/MSLP', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'])
+    add_metric(config, 'input_data/MSLP_preproc', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'])
 
 
 def make_corr_networks(config, mask):
@@ -52,7 +53,7 @@ def compute_diff_metrics(config):
     import numpy as np
     data = load_data(config)
     available_mask = get_available_mask(data)
-    prefix = str(config.network_metrics['output_network_metrics_dir'])
+    prefix = [str(config.network_metrics['output_network_metrics_dir']), 'input_data']
     metrics = load_metrics(config, prefix = prefix)
     metric_names = get_metric_names(config, prefix = prefix)
 
@@ -82,7 +83,9 @@ def plot_metrics(config):
     cyclones_frame = get_cyclones_info(config)
 
     if config.metrics_plot_options['metric_names'] is None:
-        config.metrics_plot_options['metric_names'] = get_metric_names(config)
+        #config.metrics_plot_options['metric_names'] = get_metric_names(config)
+        prefixes = ['network_metrics', 'input_data', 'diff_metrics']
+        config.metrics_plot_options['metric_names'] = get_metric_names(config, prefixes)
 
     if config.plotting_mode['metrics']:
         considered_times = get_considered_times(config)
@@ -132,7 +135,8 @@ def compute_cyclone_metrics(config):
 
     data = load_data(config)
     available_mask = get_available_mask(data)
-    metric_names = get_metric_names(config)
+    prefix = ['diff_metrics', 'network_metrics', 'input_data']
+    metric_names = get_metric_names(config, prefix = prefix)
 
     for metric_name in tqdm(metric_names):
         metric = load_metric(config, metric_name)
