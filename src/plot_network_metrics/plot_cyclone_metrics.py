@@ -1,3 +1,7 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
 def plot_local_grid_metric(cur_cyclone, metric_name, image_path):
     cur_times = pd.to_datetime(cur_cyclone['times']).values
     cur_metric = np.array(cur_cyclone['metrics'])
