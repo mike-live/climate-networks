@@ -17,6 +17,8 @@ def prepare_metric(metric_name, sel_metric, mask):
             assert(False)
     if str(metric_name).startswith('input_data'):
         sel_metric = np.moveaxis(sel_metric, 0, -1)
+    if str(metric_name).startswith('diff_metrics/input_data'):
+        sel_metric = np.reshape(sel_metric, (mask.shape[0], mask.shape[1], sel_metric.shape[-1]))
     return sel_metric
 
 def extract_metric(metrics, metric_name, mask):

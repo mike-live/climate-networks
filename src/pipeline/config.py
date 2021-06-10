@@ -156,6 +156,9 @@ metric_dimension = {
 
     'input_data/MSLP':             '2D',
     'input_data/MSLP_preproc':     '2D',
+
+    'diff_metrics/input_data/MSLP':             '2D',
+    'diff_metrics/input_data/MSLP_preproc':     '2D',
 }
 
 debug_level = 1
