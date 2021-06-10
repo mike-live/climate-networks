@@ -33,9 +33,9 @@ def parse_args():
                     const=True, default=False,
                     help='compute cyclone metrics')
 
-    parser.add_argument('--plot_cyclone_metrics', dest='need_cyclone_metrics', action='store_const',
+    parser.add_argument('--plot_cyclone_metrics', dest='need_plot_cyclone_metrics', action='store_const',
                     const=True, default=False,
-                    help='compute cyclone metrics')
+                    help='plot cyclone metrics')
 
     args = parser.parse_args()
     return args
@@ -65,5 +65,5 @@ def main():
     if args.need_cyclone_metrics:
         compute_cyclone_metrics(config)
 
-    if args.plot_cyclone_metrics:
+    if args.need_plot_cyclone_metrics:
         plot_local_grid_cyclone_metrics(config)

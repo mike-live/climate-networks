@@ -144,6 +144,21 @@ def compute_cyclone_metrics(config):
 
 def plot_local_grid_cyclone_metrics(config):
     from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, create_cyclone_dir
+    from metric_store import get_metric_names, save_metric, load_metric
+    from network_metrics import prepare_metric
+    from corr_network import load_data, get_available_mask
+    from tqdm import tqdm
+    import numpy as np
+
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+
+    from plot_network_metrics.utils import get_times_lats_lots
+    from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones
+    all_times, all_lats, all_lons = get_times_lats_lots(config)
+    cyclones_frame = get_cyclones_info(config)
+    cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
+
     cyclones_dir = create_dir(config)
     metric_names = list(get_metric_names(config, prefix = 'local_grid_metrics_for_cyclones').keys())
     for metric_name in tqdm(metric_names):
@@ -151,7 +166,7 @@ def plot_local_grid_cyclone_metrics(config):
         metric = load_metric(config, metric_name)
         metric = prepare_metric(metric_name, metric, available_mask).item()
         print(metric_name, len(metric))
-        from plot_cyclone_metrics import plot_local_grid_metric
+        from plot_network_metrics.plot_cyclone_metrics import plot_local_grid_metric
         for cid, (cyclone, (cyclone_name, cur_cyclone_metric)) in enumerate(zip(cyclones_dict, metric.items())):
             if np.sum(~np.isnan(cur_cyclone_metric['metrics'])) < 4:
                 continue
