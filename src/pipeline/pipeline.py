@@ -89,7 +89,7 @@ def plot_metrics(config):
 
     if config.plotting_mode['metrics']:
         considered_times = get_considered_times(config)
-        for metric_name in config.metrics_plot_options['metric_names']:
+        for metric_name in tqdm(config.metrics_plot_options['metric_names']):
             config.metrics_plot_options['metric_name'] = metric_name
             metric_dir = create_dir(config)
             metric = load_metric(config, metric_name)
