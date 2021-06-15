@@ -28,3 +28,28 @@ def plot_local_grid_metric(cur_cyclone, metric_name, image_path):
     
     plt.savefig(file_name)
     plt.close()
+
+
+def plot_metric_probability(cur_cyclone, metric_name, image_path):
+    import matplotlib.dates as mdates
+
+    cur_times = pd.to_datetime(cur_cyclone['times']).values
+    cur_prob = np.array(cur_cyclone['prob'])
+
+    fig = plt.figure(figsize=(7, 4), dpi=200)
+    ax = plt.gca()
+    ax.plot(cur_times, cur_prob, zorder=1)
+    ax.axhline(0.5, color='gray', zorder=0)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d %H:%M'))
+    ax.set_title(metric_name)
+    ax.set_ylabel('Probability')
+    ax.set_ylim([0, 1])
+
+    fig.autofmt_xdate()
+    fig.tight_layout()
+
+    file_name = image_path / (metric_name + '_probability.png')
+    file_name.parent.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(file_name)
+    plt.close()
