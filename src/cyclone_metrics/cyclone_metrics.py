@@ -33,10 +33,13 @@ def compute_mean_std(metric, cyclones, frame, all_times, all_lons, all_lats):
             means.append(means_array[ind_lat, ind_lon])
             stds.append(stds_array[ind_lat, ind_lon])
 
-            metric_time_array = metric[ind_lat, ind_lon, :]
-            n_greater = len(metric_time_array[np.where(metric_time_array > metric[ind_lat, ind_lon, ind_dt])])
-            n_all = len(metric_time_array)
-            prob.append(n_greater / n_all)
+            if np.isnan(metric[ind_lat, ind_lon, ind_dt]):
+                prob.append(np.nan)
+            else:
+                metric_time_array = metric[ind_lat, ind_lon, :]
+                n_greater = len(metric_time_array[np.where(metric_time_array > metric[ind_lat, ind_lon, ind_dt])])
+                n_all = len(metric_time_array)
+                prob.append(n_greater / n_all)
 
         local_metric_means_stds[create_cyclone_info_string(cyclone)] = {'times': c_times,
                                                                         'metrics': c_metric,
