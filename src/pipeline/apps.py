@@ -170,10 +170,12 @@ def plot_local_grid_cyclone_metrics(config):
         metric = load_metric(config, metric_name)
         metric = prepare_metric(metric_name, metric, available_mask).item()
         print(metric_name, len(metric))
-        from plot_network_metrics.plot_cyclone_metrics import plot_local_grid_metric
+        from plot_network_metrics.plot_cyclone_metrics import plot_local_grid_metric, plot_metric_probability
         for cid, (cyclone, (cyclone_name, cur_cyclone_metric)) in enumerate(zip(cyclones_dict, metric.items())):
             if np.sum(~np.isnan(cur_cyclone_metric['metrics'])) < 4:
                 continue
             cyclone_metric_dir = create_cyclone_dir(config, cyclone, cyclones_dir)
             plot_local_grid_metric(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
+            if config.cyclone_metrics_options['plot_probability']:
+                plot_metric_probability(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
         del metric
