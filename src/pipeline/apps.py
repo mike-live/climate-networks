@@ -10,6 +10,7 @@ def make_corr_networks(config, mask):
     from corr_network.corr_network import make_correlation_matricies
     return make_correlation_matricies(config, mask)
 
+
 def compute_metrics(config, corr_networks):
     corr_networks = np.moveaxis(corr_networks, 2, 0)
     for i in range(corr_networks.shape[0]):
@@ -17,6 +18,7 @@ def compute_metrics(config, corr_networks):
         #metrics = compute_network_metrics(config, corr_network)
     
     pass
+
 
 def compute_metrics_by_parts(config):
     from tqdm import tqdm
@@ -38,6 +40,7 @@ def compute_metrics_by_parts(config):
     metrics = combine_metric_parts(config, metrics)
     save_metrics(config, metrics)
 
+
 def compute_diff_metrics(config):
     from corr_network import load_data, get_available_mask
     from diff_metrics import parallel_compute_diff_metric
@@ -47,8 +50,8 @@ def compute_diff_metrics(config):
     data = load_data(config)
     available_mask = get_available_mask(data)
     prefix = [str(config.network_metrics['output_network_metrics_dir']), 'input_data']
-    metrics = load_metrics(config, prefix = prefix)
-    metric_names = get_metric_names(config, prefix = prefix)
+    metrics = load_metrics(config, prefix=prefix)
+    metric_names = get_metric_names(config, prefix=prefix)
 
     #diff_metrics_dir = config.diff_metrics['work_dir'] / config.diff_metrics['output_diff_metrics_dir']
     #diff_metrics_dir.mkdir(parents=True, exist_ok=True)
@@ -130,7 +133,7 @@ def compute_cyclone_metrics(config):
     data = load_data(config)
     available_mask = get_available_mask(data)
     prefix = ['diff_metrics', 'network_metrics', 'input_data']
-    metric_names = get_metric_names(config, prefix = prefix)
+    metric_names = get_metric_names(config, prefix=prefix)
 
     for metric_name in tqdm(metric_names):
         metric = load_metric(config, metric_name)
@@ -141,6 +144,7 @@ def compute_cyclone_metrics(config):
             path_to_file = "/".join((config.cyclone_metrics_options['output_local_metrics_dir'] / metric_name).parts)
             save_metric(config, local_metric_means_stds, path_to_file)
             #local_metric_means_stds = load_metric(config, path_to_file)
+
 
 def plot_local_grid_cyclone_metrics(config):
     from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, create_cyclone_dir
@@ -160,7 +164,7 @@ def plot_local_grid_cyclone_metrics(config):
     cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
 
     cyclones_dir = create_dir(config)
-    metric_names = list(get_metric_names(config, prefix = 'local_grid_metrics_for_cyclones').keys())
+    metric_names = list(get_metric_names(config, prefix='local_grid_metrics_for_cyclones').keys())
     for metric_name in tqdm(metric_names):
         config.metrics_plot_options['metric_name'] = metric_name
         metric = load_metric(config, metric_name)
@@ -171,5 +175,5 @@ def plot_local_grid_cyclone_metrics(config):
             if np.sum(~np.isnan(cur_cyclone_metric['metrics'])) < 4:
                 continue
             cyclone_metric_dir = create_cyclone_dir(config, cyclone, cyclones_dir)
-            plot_local_grid_metric(cur_cyclone_metric, metric_name, image_path = cyclone_metric_dir)
+            plot_local_grid_metric(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
         del metric
