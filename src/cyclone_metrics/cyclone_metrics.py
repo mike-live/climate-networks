@@ -23,6 +23,7 @@ def compute_mean_std(metric, cyclones, frame, all_times, all_lons, all_lats):
         c_metric = []
         means = []
         stds = []
+        prob = []
         for current_lon, current_lat, current_date_time in zip(c_lons, c_lats, c_times):
             ind_dt = np.where(all_times == current_date_time)[0][0]
             ind_lon = np.argmin(np.abs(all_lons - current_lon))
@@ -32,8 +33,14 @@ def compute_mean_std(metric, cyclones, frame, all_times, all_lons, all_lats):
             means.append(means_array[ind_lat, ind_lon])
             stds.append(stds_array[ind_lat, ind_lon])
 
+            metric_time_array = metric[ind_lat, ind_lon, :]
+            n_greater = len(metric_time_array[np.where(metric_time_array > metric[ind_lat, ind_lon, ind_dt])])
+            n_all = len(metric_time_array)
+            prob.append(n_greater / n_all)
+
         local_metric_means_stds[create_cyclone_info_string(cyclone)] = {'times': c_times,
                                                                         'metrics': c_metric,
                                                                         'means': means,
-                                                                        'stds': stds}
+                                                                        'stds': stds,
+                                                                        'prob': prob}
     return local_metric_means_stds
