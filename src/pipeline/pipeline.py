@@ -1,9 +1,13 @@
 from .apps import *
 
+config_name = "pipeline.config"
+
+
 def load_config(config_name):
     import importlib
     config = importlib.import_module(config_name)
     return config
+
 
 def parse_args():
     import argparse
