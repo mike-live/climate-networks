@@ -43,7 +43,7 @@ def plot_metric_probability(cur_cyclone, metric_name, image_path):
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d %H:%M'))
     ax.set_title(metric_name)
     ax.set_ylabel('Probability')
-    ax.set_ylim([0, 1])
+    ax.set_ylim([-0.05, 1.05])
 
     fig.autofmt_xdate()
     fig.tight_layout()
