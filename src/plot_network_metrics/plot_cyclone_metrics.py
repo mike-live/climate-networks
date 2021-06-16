@@ -23,7 +23,7 @@ def plot_local_grid_metric(cur_cyclone, metric_name, image_path):
     fig.autofmt_xdate()
     plt.tight_layout()
 
-    file_name = image_path / (metric_name + '.png')
+    file_name = image_path / (metric_name + '_mean_std.png')
     file_name.parent.mkdir(parents=True, exist_ok=True)
     
     plt.savefig(file_name)
