@@ -103,6 +103,7 @@ cyclone_metrics_options = {
     'output_local_metrics_dir': Path('local_grid_metrics_for_cyclones'),
     'start_time': '1982.01.01 00:00:00',
     'end_time': '2019.12.31 21:00:00',
+    'plot_probability': True,
 }
 
 metric_dimension = {
