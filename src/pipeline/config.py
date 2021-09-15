@@ -2,7 +2,7 @@ from pathlib2 import Path
 from .config_project import project_data_dir
 
 download_ERA5_options = {
-    'work_dir': project_data_dir / Path(r'ERA5/ERA5_MSLP_1982_2019_3h_0.75'),
+    'work_dir': '',
     'lat_file_name': 'lat.txt',
     'lon_file_name': 'lon.txt',
     'times_file_name': 'times.txt',
@@ -15,7 +15,7 @@ download_ERA5_options = {
     'land_mask': True,
     'preprocessing': True,
     'start_year': 1982,
-    'end_year': 2019,
+    'end_year': 2020,
     'start_month': 1,
     'end_month': 12,
     'start_day': 1,
@@ -29,7 +29,7 @@ download_ERA5_options = {
     'east': 100.5,
     'resolution': 0.75,
 }
-work_dir = data_dir['path_to_data'] / 'ERA5' / '_'.join(['ERA5',
+work_dir = project_data_dir / 'ERA5' / '_'.join(['ERA5',
                                                          download_ERA5_options['name_var'].upper(),
                                                          str(download_ERA5_options['start_year']),
                                                          str(download_ERA5_options['end_year']),
