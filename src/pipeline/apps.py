@@ -1,9 +1,9 @@
 def download_data(config):
     from metric_store import add_metric
-    #from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
-    #download_and_preprocessing_ERA5_data(config.download_ERA5_options)
-    add_metric(config, 'input_data/MSLP', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'])
-    add_metric(config, 'input_data/MSLP_preproc', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'])
+    from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
+    download_and_preprocessing_ERA5_data(config)
+    #add_metric(config, 'input_data/MSLP', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'])
+    #add_metric(config, 'input_data/MSLP_preproc', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'])
 
 
 def make_corr_networks(config, mask):
