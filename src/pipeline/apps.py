@@ -179,3 +179,35 @@ def plot_local_grid_cyclone_metrics(config):
             if config.cyclone_metrics_options['plot_probability']:
                 plot_metric_probability(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
         del metric
+
+
+def compute_g_test(config):
+    import pandas as pd
+    from corr_network import load_data, get_available_mask
+    from metric_store import get_metric_names, load_metric
+    from network_metrics import prepare_metric
+    from cyclones_info.cyclones_info import get_cyclones_info
+    from plot_network_metrics.utils import get_times_lats_lots
+    from g_test_for_metrics.g_test_for_metrics import g_test
+    from tqdm import tqdm
+
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+    all_times, all_lats, all_lons = get_times_lats_lots(config)
+    cyclones_frame = get_cyclones_info(config)
+
+    results = []
+
+    metric_names = list(get_metric_names(config, prefix='local_grid_metrics_for_cyclones').keys())
+    for metric_name in tqdm(metric_names[0:2]):
+        main_metric_name = metric_name[metric_name.find("/")+1:]
+        print(main_metric_name)
+        metric = load_metric(config, metric_name)
+        metric = prepare_metric(metric_name, metric, available_mask).item()
+        G, p_val, tn, fp, fn, tp = g_test(config, main_metric_name, metric, cyclones_frame, all_times, all_lats, all_lons)
+        results.append([main_metric_name, G, p_val, tn, fp, fn, tp])
+
+    results = pd.DataFrame(results, columns=['metric_name', 'G', 'p_val', 'tn', 'fp', 'fn', 'tp'])
+    file_name = config.work_dir / "g_test_results" / f"g_test_thr_{config.g_test_options['thr']}.txt"
+    file_name.parent.mkdir(parents=True, exist_ok=True)
+    results.to_csv(file_name, sep='\t', index=False)

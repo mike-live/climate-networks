@@ -41,6 +41,10 @@ def parse_args():
                     const=True, default=False,
                     help='plot cyclone metrics')
 
+    parser.add_argument('--compute_g_test_for_metrics', dest='need_compute_g_test_for_metrics', action='store_const',
+                        const=True, default=False,
+                        help='compute g-test for metrics')
+
     args = parser.parse_args()
     return args
 
@@ -71,3 +75,6 @@ def main():
 
     if args.need_plot_cyclone_metrics:
         plot_local_grid_cyclone_metrics(config)
+
+    if args.need_compute_g_test_for_metrics:
+        compute_g_test(config)
