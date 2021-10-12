@@ -135,6 +135,19 @@ cyclone_metrics_options = {
     'plot_probability': True,
 }
 
+g_test_options = {
+    'thr': 0.5,  # metric cyclone detection threshold
+    'less': ['network_metrics/LCC', 'network_metrics/LCC_w', 'network_metrics/closeness_w', 'network_metrics/LCC_0.9',
+             'network_metrics/LCC_0.95', 'diff_metrics/network_metrics/LCC', 'diff_metrics/network_metrics/LCC_w',
+             'diff_metrics/network_metrics/closeness_w'],
+    'greater': ['network_metrics/degree', 'network_metrics/degree_w', 'network_metrics/EVC', 'network_metrics/EVC_w',
+                'network_metrics/closeness', 'network_metrics/degree_0.9', 'network_metrics/EVC_0.9',
+                'network_metrics/closeness_0.9', 'network_metrics/degree_0.95', 'network_metrics/EVC_0.95',
+                'network_metrics/closeness_0.95', 'input_data/MSLP', 'input_data/MSLP_preproc', 'diff_metrics/input_data/MSLP',
+                'diff_metrics/input_data/MSLP_preproc', 'diff_metrics/network_metrics/degree', 'diff_metrics/network_metrics/degree_w',
+                'diff_metrics/network_metrics/EVC', 'diff_metrics/network_metrics/EVC_w', 'diff_metrics/network_metrics/closeness']
+}
+
 metric_dimension = {
     'network_metrics/LCC':         '2D',
     'network_metrics/GCC':         '1D',
