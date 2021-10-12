@@ -110,6 +110,18 @@ def extension_df_for_cyclone(df):
     return df_extended
 
 
+def full_extended_df_for_cyclone(extended_df):
+    res_df = extended_df.copy()
+    df_k = get_only_known_data(extended_df)
+    times, lons, lats = get_times_and_positions_for_unknown_points(extended_df, df_k)
+    for i in range(0, len(times)):
+        d = times[i]
+        row_ind = res_df[(res_df['Date (DD/MM/YYYY)'] == d.strftime('%d/%m/%Y')) &
+               (res_df['Time (UTC)'] == d.strftime('%H%M'))].index[0]
+        res_df.loc[row_ind, ['Latitude (lat.)', 'Longitude (lon.)']] = [lats[i], lons[i]]
+    return res_df
+
+
 def get_lat_lon_for_cyclone(df):
     lons = list(map(float, df['Longitude (lon.)'].values))
     lats = list(map(float, df['Latitude (lat.)'].values))
