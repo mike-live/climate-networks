@@ -199,7 +199,7 @@ def compute_g_test(config):
     results = []
 
     metric_names = list(get_metric_names(config, prefix='local_grid_metrics_for_cyclones').keys())
-    for metric_name in tqdm(metric_names[0:2]):
+    for metric_name in tqdm(metric_names):
         main_metric_name = metric_name[metric_name.find("/")+1:]
         print(main_metric_name)
         metric = load_metric(config, metric_name)
