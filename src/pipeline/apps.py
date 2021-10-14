@@ -196,7 +196,7 @@ def compute_g_test(config):
     all_times, all_lats, all_lons = get_times_lats_lots(config)
     cyclones_frame = get_cyclones_info(config)
 
-    results = []
+    results = pd.DataFrame()
 
     metric_names = list(get_metric_names(config, prefix='local_grid_metrics_for_cyclones').keys())
     for metric_name in tqdm(metric_names):
@@ -204,10 +204,10 @@ def compute_g_test(config):
         print(main_metric_name)
         metric = load_metric(config, metric_name)
         metric = prepare_metric(metric_name, metric, available_mask).item()
-        G, p_val, tn, fp, fn, tp = g_test(config, main_metric_name, metric, cyclones_frame, all_times, all_lats, all_lons)
-        results.append([main_metric_name, G, p_val, tn, fp, fn, tp])
+        results = pd.concat([results,
+                            g_test(config, main_metric_name, metric, cyclones_frame, all_times, all_lats, all_lons)],
+                            axis=0)
 
-    results = pd.DataFrame(results, columns=['metric_name', 'G', 'p_val', 'tn', 'fp', 'fn', 'tp'])
-    file_name = config.work_dir / "g_test_results" / f"g_test_thr_{config.g_test_options['thr']}.txt"
+    file_name = config.work_dir / "g_test_results" / f"g_test_thr_{config.g_test_options['thr']}.xlsx"
     file_name.parent.mkdir(parents=True, exist_ok=True)
-    results.to_csv(file_name, sep='\t', index=False)
+    results.to_excel(file_name, index=False, header=False, sheet_name=f"thr_{config.g_test_options['thr']}")

@@ -1,5 +1,6 @@
-import numpy as np
 import sys
+import numpy as np
+import pandas as pd
 from datetime import datetime
 from more_itertools import unique_everseen
 from scipy.stats import chi2_contingency
@@ -74,10 +75,15 @@ def get_events(config, metric_name, metric, cyclones_frame, times, lons, lats):
 
 def g_test(config, metric_name, metric, cyclones_frame, times, lats, lons):
     cyclones_events, predicted_events = get_events(config, metric_name, metric, cyclones_frame, times, lons, lats)
-    tn = np.sum((cyclones_events == 0) & (predicted_events == 0))
-    fp = np.sum((cyclones_events == 0) & (predicted_events == 1))
-    fn = np.sum((cyclones_events == 1) & (predicted_events == 0))
-    tp = np.sum((cyclones_events == 1) & (predicted_events == 1))
+    tn = np.sum((predicted_events == 0) & (cyclones_events == 0))
+    fp = np.sum((predicted_events == 0) & (cyclones_events == 1))
+    fn = np.sum((predicted_events == 1) & (cyclones_events == 0))
+    tp = np.sum((predicted_events == 1) & (cyclones_events == 1))
     CM = np.array([[tn, fp], [fn, tp]])
-    G, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
-    return G, p_val, tn, fp, fn, tp
+    g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
+
+    res_df = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
+                           'col2': [metric_name, g_stat, p_val, 'NoE', tn, fn, ''],
+                           'col3': ['', '', '', 'YesE', fp, tp, '']})
+
+    return res_df
