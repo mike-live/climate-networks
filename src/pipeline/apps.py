@@ -181,6 +181,29 @@ def plot_local_grid_cyclone_metrics(config):
         del metric
 
 
+def compute_metrics_probability(config):
+    from pathlib2 import Path
+    from corr_network import load_data, get_available_mask
+    from metric_store import get_metric_names, load_metric, save_metric
+    from metrics_probability.metrics_probability import compute_probability_for_metrics
+    from network_metrics import prepare_metric
+    from tqdm import tqdm
+
+    data = load_data(config)
+    available_mask = get_available_mask(data)
+    prefix = ['diff_metrics', 'network_metrics', 'input_data']
+    metric_names = get_metric_names(config, prefix=prefix)
+
+    for metric_name in tqdm(metric_names):
+        if config.metric_dimension[metric_name] == '2D':
+            print(metric_name)
+            metric = load_metric(config, metric_name)
+            metric = prepare_metric(metric_name, metric, available_mask)
+            prob = compute_probability_for_metrics(metric)
+            path_to_file = "/".join((Path('probability_for_metrics') / metric_name).parts)
+            save_metric(config, prob, path_to_file)
+
+
 def compute_g_test(config):
     import pandas as pd
     from corr_network import load_data, get_available_mask
