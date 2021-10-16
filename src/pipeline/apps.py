@@ -205,32 +205,10 @@ def compute_metrics_probability(config):
 
 
 def compute_g_test(config):
-    import pandas as pd
-    from corr_network import load_data, get_available_mask
-    from metric_store import get_metric_names, load_metric
-    from network_metrics import prepare_metric
-    from cyclones_info.cyclones_info import get_cyclones_info
-    from plot_network_metrics.utils import get_times_lats_lots
-    from g_test_for_metrics.g_test_for_metrics import g_test
-    from tqdm import tqdm
+    from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs
 
-    data = load_data(config)
-    available_mask = get_available_mask(data)
-    all_times, all_lats, all_lons = get_times_lats_lots(config)
-    cyclones_frame = get_cyclones_info(config)
-
-    results = pd.DataFrame()
-
-    metric_names = list(get_metric_names(config, prefix='local_grid_metrics_for_cyclones').keys())
-    for metric_name in tqdm(metric_names):
-        main_metric_name = metric_name[metric_name.find("/")+1:]
-        print(main_metric_name)
-        metric = load_metric(config, metric_name)
-        metric = prepare_metric(metric_name, metric, available_mask).item()
-        results = pd.concat([results,
-                            g_test(config, main_metric_name, metric, cyclones_frame, all_times, all_lats, all_lons)],
-                            axis=0)
-
-    file_name = config.work_dir / "g_test_results" / f"g_test_thr_{config.g_test_options['thr']}.xlsx"
+    path_name = config.work_dir / "g_test_results"
+    file_name = path_name / f"g_test_results.xlsx"
     file_name.parent.mkdir(parents=True, exist_ok=True)
-    results.to_excel(file_name, index=False, header=False, sheet_name=f"thr_{config.g_test_options['thr']}")
+
+    g_test_for_different_metrics_and_thrs(config, path_name, file_name)
