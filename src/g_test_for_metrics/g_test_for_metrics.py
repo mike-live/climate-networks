@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import pandas as pd
 from pandas import ExcelWriter
@@ -72,53 +71,53 @@ def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons):
 
 
 def get_sign_for_metric(config, metric_name):
-    sign = ''
     if metric_name in config.g_test_options['less']:
         sign = 'less'
     elif metric_name in config.g_test_options['greater']:
         sign = 'greater'
     else:
-        print("There is no boxplot for", metric_name)
-        sys.exit()
+        print("There is no boxplot for probability of ", metric_name)
+        sign = -1
     return sign
 
 
 def get_metric_indicators(config, metric_name, metric_prob, thr):
-    nan_mask = np.isnan(metric_prob)
-
-    predicted_events = np.zeros(metric_prob.shape, dtype='float')
     sign = get_sign_for_metric(config, metric_name)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        if sign == 'less':
-            predicted_events[metric_prob < thr] = 1
-        elif sign == 'greater':
-            predicted_events[metric_prob > thr] = 1
-
-    predicted_events[nan_mask] = np.nan
-
-    return predicted_events
+    if sign == -1:
+        return np.array([])
+    else:
+        nan_mask = np.isnan(metric_prob)
+        predicted_events = np.zeros(metric_prob.shape, dtype='float')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            if sign == 'less':
+                predicted_events[metric_prob < thr] = 1
+            elif sign == 'greater':
+                predicted_events[metric_prob > thr] = 1
+        predicted_events[nan_mask] = np.nan
+        return predicted_events
 
 
 def g_test(config, metric_name, metric_prob, thr, cyclones_events):
     predicted_events = get_metric_indicators(config, metric_name, metric_prob, thr)
+    if len(predicted_events) == 0:
+        return pd.DataFrame()
+    else:
+        nan_mask = np.isnan(metric_prob)
+        cyclones_events_copy = cyclones_events.copy()
+        cyclones_events_copy[nan_mask] = np.nan
 
-    nan_mask = np.isnan(metric_prob)
-    cyclones_events_copy = cyclones_events.copy()
-    cyclones_events_copy[nan_mask] = np.nan
+        tn = np.sum((predicted_events == 0) & (cyclones_events_copy == 0))
+        fp = np.sum((predicted_events == 0) & (cyclones_events_copy == 1))
+        fn = np.sum((predicted_events == 1) & (cyclones_events_copy == 0))
+        tp = np.sum((predicted_events == 1) & (cyclones_events_copy == 1))
+        CM = np.array([[tn, fp], [fn, tp]])
+        g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
 
-    tn = np.sum((predicted_events == 0) & (cyclones_events_copy == 0))
-    fp = np.sum((predicted_events == 0) & (cyclones_events_copy == 1))
-    fn = np.sum((predicted_events == 1) & (cyclones_events_copy == 0))
-    tp = np.sum((predicted_events == 1) & (cyclones_events_copy == 1))
-    CM = np.array([[tn, fp], [fn, tp]])
-    g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
-
-    res_df = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
-                           'col2': [metric_name, g_stat, p_val, 'NoE', tn, fn, ''],
-                           'col3': ['', '', '', 'YesE', fp, tp, '']})
-
-    return res_df
+        res_df = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
+                               'col2': [metric_name, g_stat, p_val, 'NoE', tn, fn, ''],
+                               'col3': ['', '', '', 'YesE', fp, tp, '']})
+        return res_df
 
 
 def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
@@ -141,7 +140,7 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
     for thr in tqdm(list(config.g_test_options['thr'])):
         print(f'thr = {thr}')
         results = pd.DataFrame()
-        for metric_name in metric_names:
+        for metric_name in tqdm(metric_names):
             main_metric_name = metric_name[metric_name.find("/") + 1:]
             print(main_metric_name)
             metric_prob = load_metric(config, metric_name)
