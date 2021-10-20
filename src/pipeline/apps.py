@@ -181,6 +181,21 @@ def plot_local_grid_cyclone_metrics(config):
         del metric
 
 
+def compute_cyclone_events(config):
+    import numpy as np
+    from cyclone_metrics import get_cyclone_events
+    from plot_network_metrics.utils import get_times_lats_lots
+    from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones
+
+    all_times, all_lats, all_lons = get_times_lats_lots(config)
+    cyclones_frame = get_cyclones_info(config)
+    cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
+
+    file_name_cyclone = "cyclones_events.npy"
+    cyclones_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons)
+    np.save(file_name_cyclone, cyclones_events)
+
+
 def compute_metrics_probability(config):
     from pathlib2 import Path
     from corr_network import load_data, get_available_mask
@@ -194,9 +209,10 @@ def compute_metrics_probability(config):
     prefix = ['diff_metrics', 'network_metrics', 'input_data']
     metric_names = get_metric_names(config, prefix=prefix)
 
-    for metric_name in tqdm(metric_names):
+    pbar_for_metrics = tqdm(metric_names)
+    for metric_name in pbar_for_metrics:
         if config.metric_dimension[metric_name] == '2D':
-            print(metric_name)
+            pbar_for_metrics.set_postfix({'metric': metric_name})
             metric = load_metric(config, metric_name)
             metric = prepare_metric(metric_name, metric, available_mask)
             prob = compute_probability_for_metrics(metric)
@@ -207,7 +223,7 @@ def compute_metrics_probability(config):
 def compute_g_test(config):
     from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs
 
-    path_name = config.work_dir / "g_test_results"
+    path_name = config.work_dir / ("g_test_results_" + config.prefix_for_preproc_data + '_' + config.prefix_for_corr)
     file_name = path_name / f"g_test_results.xlsx"
     file_name.parent.mkdir(parents=True, exist_ok=True)
 
