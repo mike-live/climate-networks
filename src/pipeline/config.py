@@ -29,6 +29,9 @@ download_ERA5_options = {
     'east': 100.5,
     'resolution': 0.75,
 }
+
+prefix_for_preproc_data = 'land_masked_and_preproc'
+prefix_for_corr = 'window_10d_delay_0d'
 work_dir = project_data_dir / 'ERA5' / '_'.join(['ERA5',
                                                          download_ERA5_options['name_var'].upper(),
                                                          str(download_ERA5_options['start_year']),
@@ -36,28 +39,6 @@ work_dir = project_data_dir / 'ERA5' / '_'.join(['ERA5',
                                                          str(download_ERA5_options['step_time']) + 'h',
                                                          str(download_ERA5_options['resolution'])])
 download_ERA5_options['work_dir'] = work_dir
-
-
-correlations = {
-    'work_dir': Path(r'../../../data/ERA5/ERA5_SST_1982_2019_3h_0.75'),
-    'input_file_name': 'resulting_cube_after_preproc_ERA5_SST_1982_2019_3h_0.75.npz',
-    'input_var_name': 'arr_0',
-    'output_correlation_file_name': 'corr_online_preproc_ERA5_SST_1982_2019_3h_0.75_window_10d_delay_0d.npy',
-#    'output_correlation_var_name': 'result',
-    'delay_time': 0,
-    'window_size': 80,
-    'num_threads': 85,
-    'need_save': False,
-    'num_parts': 666,
-    'id_part': 1,
-    'output_level': 1,
-}
-
-network_metrics = {
-    'num_threads': 84,
-    'work_dir': correlations['work_dir'],
-    'output_metrics_file_name': 'metrics_corr_preproc_ERA5_SST_1982_2019_3h_0.75_window_10d_delay_0d.npy',
-}
 
 correlations = {
     'work_dir': download_ERA5_options['work_dir'],
@@ -136,18 +117,22 @@ cyclone_metrics_options = {
 }
 
 g_test_options = {
-    'start_time': '1982.01.01 00:00:00',
-    'end_time': '2020.12.31 21:00:00',
     'thr': [0.25, 0.5, 0.75],  # threshold list for metric indication
     'less': ['network_metrics/LCC', 'network_metrics/LCC_w', 'network_metrics/closeness_w', 'network_metrics/LCC_0.9',
              'network_metrics/LCC_0.95', 'diff_metrics/network_metrics/LCC', 'diff_metrics/network_metrics/LCC_w',
+             'diff_metrics/network_metrics/LCC_0.9', 'diff_metrics/network_metrics/LCC_0.95',
              'diff_metrics/network_metrics/closeness_w'],
     'greater': ['network_metrics/degree', 'network_metrics/degree_w', 'network_metrics/EVC', 'network_metrics/EVC_w',
                 'network_metrics/closeness', 'network_metrics/degree_0.9', 'network_metrics/EVC_0.9',
                 'network_metrics/closeness_0.9', 'network_metrics/degree_0.95', 'network_metrics/EVC_0.95',
-                'network_metrics/closeness_0.95', 'input_data/MSLP', 'input_data/MSLP_preproc', 'diff_metrics/input_data/MSLP',
-                'diff_metrics/input_data/MSLP_preproc', 'diff_metrics/network_metrics/degree', 'diff_metrics/network_metrics/degree_w',
-                'diff_metrics/network_metrics/EVC', 'diff_metrics/network_metrics/EVC_w', 'diff_metrics/network_metrics/closeness']
+                'network_metrics/closeness_0.95', 'input_data/MSLP', 'input_data/MSLP_preproc', 'input_data/MSLP_land',
+                'diff_metrics/input_data/MSLP', 'diff_metrics/input_data/MSLP_preproc', 'diff_metrics/input_data/MSLP_land',
+                'diff_metrics/network_metrics/degree', 'diff_metrics/network_metrics/degree_w',
+                'diff_metrics/network_metrics/EVC', 'diff_metrics/network_metrics/EVC_w',
+                'diff_metrics/network_metrics/closeness', 'diff_metrics/network_metrics/degree_0.9',
+                'diff_metrics/network_metrics/degree_0.95', 'diff_metrics/network_metrics/EVC_0.9',
+                'diff_metrics/network_metrics/EVC_0.95', 'diff_metrics/network_metrics/closeness_0.9',
+                'diff_metrics/network_metrics/closeness_0.95']
 }
 
 metric_dimension = {
