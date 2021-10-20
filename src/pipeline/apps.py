@@ -191,9 +191,9 @@ def compute_cyclone_events(config):
     cyclones_frame = get_cyclones_info(config)
     cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
 
-    file_name_cyclone = "cyclones_events.npy"
+    file_name_cyclone = "cyclones_events.npz"
     cyclones_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons)
-    np.save(file_name_cyclone, cyclones_events)
+    np.savez_compressed(file_name_cyclone, cyclones_events)
 
 
 def compute_metrics_probability(config):

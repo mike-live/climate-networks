@@ -53,7 +53,7 @@ def g_test(config, metric_name, metric_prob, thr, cyclones_events):
 
 
 def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
-    cyclones_events = np.load("cyclones_events.npy")
+    cyclones_events = np.load("cyclones_events.npz")['arr_0']
 
     writer = ExcelWriter(file_name)
 
