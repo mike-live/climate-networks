@@ -41,6 +41,10 @@ def parse_args():
                     const=True, default=False,
                     help='plot cyclone metrics')
 
+    parser.add_argument('--compute_cyclone_events', dest='need_cyclone_events', action='store_const',
+                        const=True, default=False,
+                        help='compute cyclone events')
+
     parser.add_argument('--compute_metrics_probability', dest='need_compute_metrics_probability', action='store_const',
                         const=True, default=False,
                         help='compute metrics probability')
@@ -79,6 +83,9 @@ def main():
 
     if args.need_plot_cyclone_metrics:
         plot_local_grid_cyclone_metrics(config)
+
+    if args.need_cyclone_events:
+        compute_cyclone_events(config)
 
     if args.need_compute_metrics_probability:
         compute_metrics_probability(config)
