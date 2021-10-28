@@ -221,10 +221,14 @@ def compute_metrics_probability(config):
 
 
 def compute_g_test(config):
-    from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs
+    from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs, \
+        save_optimal_results_for_g_test
 
     path_name = config.work_dir / ("g_test_results_" + config.prefix_for_preproc_data + '_' + config.prefix_for_corr)
-    file_name = path_name / f"g_test_results.xlsx"
-    file_name.parent.mkdir(parents=True, exist_ok=True)
+    file_name_1 = path_name / f"g_test_results.xlsx"
+    file_name_1.parent.mkdir(parents=True, exist_ok=True)
 
-    g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+    optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name_1)
+
+    file_name_2 = path_name / f"g_test_optimal_results.xlsx"
+    save_optimal_results_for_g_test(optimal_results, file_name_2)

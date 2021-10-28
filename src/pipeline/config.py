@@ -117,7 +117,8 @@ cyclone_metrics_options = {
 }
 
 g_test_options = {
-    'thr': [0.25, 0.5, 0.75],  # threshold list for metric indication
+    'thr': [0.0, 0.25, 0.5, 0.75, 1.0],  # threshold list for metric indication
+    'window_size': 2,
     'less': ['network_metrics/LCC', 'network_metrics/LCC_w', 'network_metrics/closeness_w', 'network_metrics/LCC_0.9',
              'network_metrics/LCC_0.95', 'diff_metrics/network_metrics/LCC', 'diff_metrics/network_metrics/LCC_w',
              'diff_metrics/network_metrics/LCC_0.9', 'diff_metrics/network_metrics/LCC_0.95',
