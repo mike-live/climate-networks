@@ -40,16 +40,13 @@ def g_test(config, metric_name, metric_prob, thr, cyclones_events):
     else:
         not_nan_mask = np.logical_not(np.isnan(metric_prob))
         tn = np.sum(np.logical_not(predicted_events) & np.logical_not(cyclones_events) & not_nan_mask)
-        fp = np.sum(np.logical_not(predicted_events) & cyclones_events & not_nan_mask)
-        fn = np.sum(predicted_events & np.logical_not(cyclones_events) & not_nan_mask)
+        fn = np.sum(np.logical_not(predicted_events) & cyclones_events & not_nan_mask)
+        fp = np.sum(predicted_events & np.logical_not(cyclones_events) & not_nan_mask)
         tp = np.sum(predicted_events & cyclones_events & not_nan_mask)
-        CM = np.array([[tn, fp], [fn, tp]])
+        CM = np.array([[tn, fn], [fp, tp]])
         g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
 
-        res_df = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
-                               'col2': [metric_name, g_stat, p_val, 'NoE', tn, fn, ''],
-                               'col3': ['', '', '', 'YesE', fp, tp, '']})
-        return res_df
+        return g_stat, p_val, tn, fn, fp, tp
 
 
 def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
@@ -65,7 +62,10 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
         metric_prob = load_metric(config, metric_name)
         for thr in list(config.g_test_options['thr']):
             pbar_for_metrics.set_postfix({'metric': main_metric_name, 'thr': thr})
-            results = g_test(config, main_metric_name, metric_prob, thr, cyclones_events)
+            g_stat, p_val, tn, fn, fp, tp = g_test(config, main_metric_name, metric_prob, thr, cyclones_events)
+            results = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
+                                   'col2': [main_metric_name, g_stat, p_val, 'NoE', tn, fp, ''],
+                                   'col3': ['', '', '', 'YesE', fn, tp, '']})
             #results = pd.concat([results, g_test(config, main_metric_name, metric_prob, thr, cyclones_events)], axis=0)
             results.to_excel(writer, sheet_name=f"thr_{thr}", startrow=ii, index=False, header=False)
         ii += len(results)
