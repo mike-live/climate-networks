@@ -72,7 +72,6 @@ def calc_balanced_accuracy(tn, fn, fp, tp):
 
 
 def calc_matthews_coefficient(tn, fn, fp, tp):
-    # Maybe overflow !!!
     if (tp + fp == 0) or (tp + fn == 0) or (tn + fp == 0) or (tn + fn == 0):
         mcc = 0
     else:
@@ -103,9 +102,9 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
             if g_stat == 'NA':
                 f1 = b_acc = mcc = 'NA'
             else:
-                f1 = calc_f1_score(fn, fp, tp)
-                b_acc = calc_balanced_accuracy(tn, fn, fp, tp)
-                mcc = calc_matthews_coefficient(tn, fn, fp, tp)
+                f1 = calc_f1_score(float(fn), float(fp), float(tp))
+                b_acc = calc_balanced_accuracy(float(tn), float(fn), float(fp), float(tp))
+                mcc = calc_matthews_coefficient(float(tn), float(fn), float(fp), float(tp))
 
             sign = get_sign_for_metric(config, main_metric_name)
             results = pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic', 'p-value', 'f1_score',
