@@ -44,8 +44,12 @@ def g_test(config, metric_name, metric_prob, thr, cyclones_events):
         fn = np.sum(np.logical_not(predicted_events) & cyclones_events & not_nan_mask)
         fp = np.sum(predicted_events & np.logical_not(cyclones_events) & not_nan_mask)
         tp = np.sum(predicted_events & cyclones_events & not_nan_mask)
-        CM = np.array([[tn, fn], [fp, tp]])
-        g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
+
+        if ((tn == 0) and (fn == 0)) or ((fp == 0) and (tp == 0)):
+            g_stat = p_val = tn = fn = fp = tp = 'NA'
+        else:
+            CM = np.array([[tn, fn], [fp, tp]])
+            g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
 
         return g_stat, p_val, tn, fn, fp, tp
 
@@ -92,9 +96,12 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
         for thr in list(config.g_test_options['thr']):
             pbar_for_metrics.set_postfix({'metric': main_metric_name, 'thr': thr})
             g_stat, p_val, tn, fn, fp, tp = g_test(config, main_metric_name, metric_prob, thr, cyclones_events)
-            f1 = calc_f1_score(fn, fp, tp)
-            b_acc = calc_balanced_accuracy(tn, fn, fp, tp)
-            mcc = calc_matthews_coefficient(tn, fn, fp, tp)
+            if g_stat == 'NA':
+                f1 = b_acc = mcc = 'NA'
+            else:
+                f1 = calc_f1_score(fn, fp, tp)
+                b_acc = calc_balanced_accuracy(tn, fn, fp, tp)
+                mcc = calc_matthews_coefficient(tn, fn, fp, tp)
 
             sign = get_sign_for_metric(config, main_metric_name)
             results = pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic', 'p-value', 'f1_score',
