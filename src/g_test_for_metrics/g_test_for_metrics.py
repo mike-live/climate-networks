@@ -10,9 +10,9 @@ from metric_store import get_metric_names, load_metric
 
 def get_sign_for_metric(config, metric_name):
     if metric_name in config.g_test_options['less']:
-        sign = 'less'
+        sign = '<'
     elif metric_name in config.g_test_options['greater']:
-        sign = 'greater'
+        sign = '>'
     else:
         print("There is no boxplot for probability of ", metric_name)
         sign = -1
@@ -27,9 +27,9 @@ def get_metric_indicators(config, metric_name, metric_prob, thr):
         predicted_events = np.zeros(metric_prob.shape, dtype='bool')
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            if sign == 'less':
+            if sign == '<':
                 predicted_events = metric_prob < thr
-            elif sign == 'greater':
+            elif sign == '>':
                 predicted_events = metric_prob > thr
         return predicted_events
 
@@ -95,10 +95,13 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
             f1 = calc_f1_score(fn, fp, tp)
             b_acc = calc_balanced_accuracy(tn, fn, fp, tp)
             mcc = calc_matthews_coefficient(tn, fn, fp, tp)
+
+            sign = get_sign_for_metric(config, main_metric_name)
             results = pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic', 'p-value', 'f1_score',
                                              'balanced_acc', 'matthews_coef', '', 'NoI', 'YesI', ''],
-                                   'col2': [main_metric_name, g_stat, p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
-                                   'col3': ['', '', '', '', '', '', 'YesE', fn, tp, '']})
+                                   'col2': [main_metric_name, sign + str(thr) if type(sign) == str else '', g_stat,
+                                            p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
+                                   'col3': ['', '', '', '', '', '', '', 'YesE', fn, tp, '']})
             #results = pd.concat([results, g_test(config, main_metric_name, metric_prob, thr, cyclones_events)], axis=0)
             results.to_excel(writer, sheet_name=f"thr_{thr}", startrow=ii, index=False, header=False)
         ii += len(results)
