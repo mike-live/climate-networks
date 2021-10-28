@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from pandas import ExcelWriter
@@ -49,6 +50,34 @@ def g_test(config, metric_name, metric_prob, thr, cyclones_events):
         return g_stat, p_val, tn, fn, fp, tp
 
 
+def calc_f1_score(fn, fp, tp):
+    # F1 score does not take into account how many negative examples there are in the dataset
+    if (tp == 0) and (fp == 0) and (fn == 0):
+        f1_score = 0
+    else:
+        f1_score = (2 * tp) / (2 * tp + fp + fn)
+    return f1_score
+
+
+def calc_balanced_accuracy(tn, fn, fp, tp):
+    if (tp + fn == 0) and (tn + fp == 0):
+        b_acc = 0
+    else:
+        b_acc = 0.5 * ((tp / (tp + fn)) + (tn / (tn + fp)))
+    return b_acc
+
+
+def calc_matthews_coefficient(tn, fn, fp, tp):
+    # Maybe overflow !!!
+    if (tp + fp == 0) or (tp + fn == 0) or (tn + fp == 0) or (tn + fn == 0):
+        mcc = 0
+    else:
+        denominator1 = math.sqrt(tp + fp) * math.sqrt(tp + fn)
+        denominator2 = math.sqrt(tn + fp) * math.sqrt(tn + fn)
+        mcc = ((tp / denominator1) * (tn / denominator2)) - ((fp / denominator1) * (fn / denominator2))
+    return mcc
+
+
 def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
     cyclones_events = np.load("cyclones_events.npz")['arr_0']
 
@@ -63,9 +92,13 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
         for thr in list(config.g_test_options['thr']):
             pbar_for_metrics.set_postfix({'metric': main_metric_name, 'thr': thr})
             g_stat, p_val, tn, fn, fp, tp = g_test(config, main_metric_name, metric_prob, thr, cyclones_events)
-            results = pd.DataFrame({'col1': ['metric_name', 'g-statistic', 'p-value', '', 'NoI', 'YesI', ''],
-                                   'col2': [main_metric_name, g_stat, p_val, 'NoE', tn, fp, ''],
-                                   'col3': ['', '', '', 'YesE', fn, tp, '']})
+            f1 = calc_f1_score(fn, fp, tp)
+            b_acc = calc_balanced_accuracy(tn, fn, fp, tp)
+            mcc = calc_matthews_coefficient(tn, fn, fp, tp)
+            results = pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic', 'p-value', 'f1_score',
+                                             'balanced_acc', 'matthews_coef', '', 'NoI', 'YesI', ''],
+                                   'col2': [main_metric_name, g_stat, p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
+                                   'col3': ['', '', '', '', '', '', 'YesE', fn, tp, '']})
             #results = pd.concat([results, g_test(config, main_metric_name, metric_prob, thr, cyclones_events)], axis=0)
             results.to_excel(writer, sheet_name=f"thr_{thr}", startrow=ii, index=False, header=False)
         ii += len(results)
