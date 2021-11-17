@@ -16,6 +16,9 @@ def parse_args():
     parser.add_argument('--download', dest='need_download', action='store_const',
                     const=True, default=False,
                     help='download era5 data and preprocess')
+    parser.add_argument('--add_input_data', dest='need_input_data', action='store_const',
+                    const=True, default=False,
+                    help='add input data to metric store')
     parser.add_argument('--compute_correlations', dest='need_corr_network', action='store_const',
                     const=True, default=False,
                     help='compute correlation matricies')
@@ -62,6 +65,9 @@ def main():
     config = load_config(config_name)
     if args.need_download:
         download_data(config)
+
+    if args.need_input_data:
+        add_input_data_to_metric(config)
 
     if args.need_corr_network:
         make_corr_networks(config)

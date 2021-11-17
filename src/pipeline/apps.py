@@ -2,8 +2,23 @@ def download_data(config):
     from metric_store import add_metric
     from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
     download_and_preprocessing_ERA5_data(config)
-    #add_metric(config, 'input_data/MSLP', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'])
-    #add_metric(config, 'input_data/MSLP_preproc', config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'])
+    
+def add_input_data_to_metric(config):    
+    from metric_store import save_metric
+    import numpy as np
+    
+    file_names = {
+        'input_data/MSLP_preproc': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'],
+        'input_data/MSLP': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'],
+        'input_data/MSLP_land': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_file_name'],
+    }
+
+    for metric_name, file_name in file_names.items():
+        print(metric_name, file_name)
+        data = np.load(file_name)
+        print(list(data.keys()))
+        resulting_cube = data['arr_0']
+        save_metric(config, resulting_cube, metric_name)
 
 
 def make_corr_networks(config, mask):
@@ -186,14 +201,20 @@ def compute_cyclone_events(config):
     from cyclone_metrics import get_cyclone_events
     from plot_network_metrics.utils import get_times_lats_lots
     from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones
+    from tqdm import tqdm
 
     all_times, all_lats, all_lons = get_times_lats_lots(config)
     cyclones_frame = get_cyclones_info(config)
     cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
 
+    track_size = config.g_test_options['track_size']
+    track_sizes = config.g_test_options['track_sizes']
     file_name_cyclone = "cyclones_events.npz"
-    cyclones_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons)
-    np.savez_compressed(file_name_cyclone, cyclones_events)
+    cyclones_events_tracks = {}
+    for track_size in tqdm(track_sizes):
+        cyclones_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons, track_size)
+        cyclones_events_tracks['cyclone_events_' + str(track_size)] = cyclones_events
+    np.savez_compressed(file_name_cyclone, **cyclones_events_tracks)
 
 
 def compute_metrics_probability(config):
@@ -224,11 +245,16 @@ def compute_g_test(config):
     from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs, \
         save_optimal_results_for_g_test
 
-    path_name = config.work_dir / ("g_test_results_" + config.prefix_for_preproc_data + '_' + config.prefix_for_corr)
-    file_name_1 = path_name / f"g_test_results.xlsx"
-    file_name_1.parent.mkdir(parents=True, exist_ok=True)
+    path_name = config.work_dir
+    path_name /= f"results_{config.prefix_for_preproc_data}_{config.prefix_for_corr}"
+    path_name /= "cyclone_metric_relation"
+    path_name /= f"track_size_{config.g_test_options['track_size']}"
 
-    optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name_1)
+    l = len(config.g_test_options['thr'])
+    file_name = path_name / f"g_test_full_{l}.xlsx"
+    file_name.parent.mkdir(parents=True, exist_ok=True)
 
-    file_name_2 = path_name / f"g_test_optimal_results.xlsx"
+    optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+
+    file_name_2 = path_name / f"g_test_optimal.xlsx"
     save_optimal_results_for_g_test(optimal_results, file_name_2)
