@@ -97,7 +97,7 @@ def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons, track_s
             for k in range(len(curr_cyc_df)):
                 d = datetime.strptime(curr_cyc_df['Date (DD/MM/YYYY)'][k] + ' ' + curr_cyc_df['Time (UTC)'][k],
                                       '%d/%m/%Y %H%M')
-                ind_time = list(times).index(d.strftime('%Y.%m.%d %H:%M:%S'))
+                ind_time = np.searchsorted(times, d.strftime('%Y.%m.%d %H:%M:%S'))
                 message, start_ind_lat, end_ind_lat, \
                 start_ind_lon, end_ind_lon = get_cyclone_area(float(curr_cyc_df['Latitude (lat.)'][k]),
                                                               float(curr_cyc_df['Longitude (lon.)'][k]),
