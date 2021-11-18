@@ -244,17 +244,22 @@ def compute_metrics_probability(config):
 def compute_g_test(config):
     from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs, \
         save_optimal_results_for_g_test
+    from tqdm import tqdm
 
-    path_name = config.work_dir
-    path_name /= f"results_{config.prefix_for_preproc_data}_{config.prefix_for_corr}"
-    path_name /= "cyclone_metric_relation"
-    path_name /= f"track_size_{config.g_test_options['track_size']}"
+    pbar_tracks_sizes = tqdm(config.g_test_options['track_sizes'])
+    for config.g_test_options['track_size'] in pbar_tracks_sizes:
+        pbar_tracks_sizes.set_postfix({'track_size': config.g_test_options['track_size']})
 
-    l = len(config.g_test_options['thr'])
-    file_name = path_name / f"g_test_full_{l}.xlsx"
-    file_name.parent.mkdir(parents=True, exist_ok=True)
+        path_name = config.work_dir
+        path_name /= f"results_{config.prefix_for_preproc_data}_{config.prefix_for_corr}"
+        path_name /= "cyclone_metric_relation"
+        path_name /= f"track_size_{config.g_test_options['track_size']}"
 
-    optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+        l = len(config.g_test_options['thr'])
+        file_name = path_name / f"g_test_full_{l}.xlsx"
+        file_name.parent.mkdir(parents=True, exist_ok=True)
 
-    file_name_2 = path_name / f"g_test_optimal.xlsx"
-    save_optimal_results_for_g_test(optimal_results, file_name_2)
+        optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+
+        file_name_2 = path_name / f"g_test_optimal.xlsx"
+        save_optimal_results_for_g_test(optimal_results, file_name_2)
