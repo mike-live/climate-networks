@@ -82,7 +82,9 @@ def calc_matthews_coefficient(tn, fn, fp, tp):
 
 
 def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
-    cyclones_events = np.load("cyclones_events.npz")['arr_0']
+    track_size = str(config.g_test_options['track_size'])
+    cyclones_events_name = f'cyclone_events_{track_size}'
+    cyclones_events = np.load("cyclones_events.npz")[cyclones_events_name]
 
     writer = ExcelWriter(file_name)
 

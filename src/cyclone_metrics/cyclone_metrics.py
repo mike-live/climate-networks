@@ -51,7 +51,7 @@ def compute_mean_std(metric, cyclones, frame, all_times, all_lons, all_lats):
     return local_metric_means_stds
 
 
-def get_cyclone_area(cur_lat, cur_lon, lats, lons):
+def get_cyclone_area(cur_lat, cur_lon, lats, lons, track_size=2):
     indexes_lat = np.where(lats >= cur_lat)[0]  # lats sorted as >=
     indexes_lon = np.where(lons <= cur_lon)[0]
 
@@ -73,15 +73,16 @@ def get_cyclone_area(cur_lat, cur_lon, lats, lons):
         message = 'Cyclone outside the grid'
 
     # область = 4 клеток (2 по широте и 2 по долготе)
-    start_ind_lat = ind_lat
-    end_ind_lat = ind_lat + 2
-    start_ind_lon = ind_lon
-    end_ind_lon = ind_lon + 2
+    window_half = (track_size - 2) // 2
+    start_ind_lat = max(0, ind_lat - window_half)
+    end_ind_lat = min(ind_lat + 2 + window_half, len(lats))
+    start_ind_lon = max(0, ind_lon - window_half)
+    end_ind_lon = min(ind_lon + 2 + window_half, len(lons))
 
     return message, start_ind_lat, end_ind_lat, start_ind_lon, end_ind_lon
 
 
-def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons):
+def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons, track_size=2):
     shapes = (len(lats), len(lons), len(times))
     cyclones_events = np.zeros(shapes, dtype='bool')
 
@@ -100,7 +101,7 @@ def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons):
                 message, start_ind_lat, end_ind_lat, \
                 start_ind_lon, end_ind_lon = get_cyclone_area(float(curr_cyc_df['Latitude (lat.)'][k]),
                                                               float(curr_cyc_df['Longitude (lon.)'][k]),
-                                                              lats, lons)
+                                                              lats, lons, track_size)
                 if message == '':
                     cyclones_events[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time] = True
 
