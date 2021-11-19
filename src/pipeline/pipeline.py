@@ -56,6 +56,10 @@ def parse_args():
                         const=True, default=False,
                         help='compute g-test for metrics')
 
+    parser.add_argument('--compute_optimal_thr_for_g_test', dest='need_compute_optimal_thr_for_g_test', action='store_const',
+                        const=True, default=False,
+                        help='compute optimal threshold for g-test')
+
     args = parser.parse_args()
     return args
 
@@ -98,3 +102,6 @@ def main():
 
     if args.need_compute_g_test_for_metrics:
         compute_g_test(config)
+
+    if args.need_compute_optimal_thr_for_g_test:
+        compute_optimal_g_test_results(config)

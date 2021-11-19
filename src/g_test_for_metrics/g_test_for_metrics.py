@@ -86,15 +86,12 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
     cyclones_events_name = f'cyclone_events_{track_size}'
     cyclones_events = np.load("cyclones_events.npz")[cyclones_events_name]
 
-    writer = ExcelWriter(file_name)
-
     metric_names = list(get_metric_names(config, prefix='probability_for_metrics').keys())
     pbar_for_metrics = tqdm(metric_names)
 
-    optimal_results = dict.fromkeys(metric_names, {'prob_for_metric': '', 'g_statistic': -999999, 'f1_score': 'NA',
-                                                   'balanced_acc': 'NA', 'matthews_coef': 'NA'})
+    results = dict.fromkeys([f"thr_{thr}" for thr in list(config.g_test_options['thr'])],
+                            pd.DataFrame(columns=['col1', 'col2', 'col3']))
 
-    ii = 0
     for metric_name in pbar_for_metrics:
         main_metric_name = metric_name[metric_name.find("/") + 1:]
         metric_prob = load_metric(config, metric_name)
@@ -109,29 +106,21 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
                 mcc = calc_matthews_coefficient(float(tn), float(fn), float(fp), float(tp))
 
             sign = get_sign_for_metric(config, main_metric_name)
-            results = pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic', 'p-value', 'f1_score',
-                                             'balanced_acc', 'matthews_coef', '', 'NoI', 'YesI', ''],
-                                   'col2': [main_metric_name, sign + str(thr) if type(sign) == str else '', g_stat,
-                                            p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
-                                   'col3': ['', '', '', '', '', '', '', 'YesE', fn, tp, '']})
-            #results = pd.concat([results, g_test(config, main_metric_name, metric_prob, thr, cyclones_events)], axis=0)
-            results.to_excel(writer, sheet_name=f"thr_{thr}", startrow=ii, index=False, header=False)
+            results[f"thr_{thr}"] = pd.concat([results[f"thr_{thr}"],
+                                               pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic',
+                                                                      'p-value', 'f1_score', 'balanced_acc',
+                                                                      'matthews_coef', '', 'NoI', 'YesI', ''],
+                                                             'col2': [main_metric_name,
+                                                                      sign + str(thr) if type(sign) == str else '',
+                                                                      g_stat, p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
+                                                             'col3': ['', '', '', '', '', '', '', 'YesE', fn, tp, '']})],
+                                              axis=0)
 
-            if (g_stat != 'NA') and (g_stat > optimal_results[metric_name]['g_statistic']):
-                optimal_results[metric_name] = {'prob_for_metric': sign + str(thr) if type(sign) == str else '',
-                                                'g_statistic': g_stat, 'f1_score': f1, 'balanced_acc': b_acc,
-                                                'matthews_coef': mcc}
-        ii += len(results)
+    return results
+
+
+def save_full_results_for_g_test(res_dict, file_name):
+    writer = ExcelWriter(file_name)
+    for key, value in res_dict.items():
+        value.to_excel(writer, sheet_name=key, startrow=0, index=False, header=False)
     writer.save()
-
-    return optimal_results
-
-
-def save_optimal_results_for_g_test(opt_res_dict, file_name):
-    df_res = pd.DataFrame(columns=['metric_name', 'prob_for_metric', 'g_statistic', 'f1_score', 'balanced_acc',
-                                   'matthews_coef'])
-    for metric_name, internal_dict in opt_res_dict.items():
-        df_res.loc[len(df_res)] = [metric_name[metric_name.find("/") + 1:]] + \
-                                  [v for k, v in opt_res_dict[metric_name].items()]
-
-    df_res.to_excel(file_name, index=False)

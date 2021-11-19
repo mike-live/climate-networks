@@ -2,7 +2,8 @@ def download_data(config):
     from metric_store import add_metric
     from download_data.download_ERA5_data import download_and_preprocessing_ERA5_data
     download_and_preprocessing_ERA5_data(config)
-    
+
+
 def add_input_data_to_metric(config):    
     from metric_store import save_metric
     import numpy as np
@@ -243,7 +244,7 @@ def compute_metrics_probability(config):
 
 def compute_g_test(config):
     from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs, \
-        save_optimal_results_for_g_test
+        save_full_results_for_g_test
     from tqdm import tqdm
 
     pbar_tracks_sizes = tqdm(config.g_test_options['track_sizes'])
@@ -255,11 +256,33 @@ def compute_g_test(config):
         path_name /= "cyclone_metric_relation"
         path_name /= f"track_size_{config.g_test_options['track_size']}"
 
-        l = len(config.g_test_options['thr'])
-        file_name = path_name / f"g_test_full_{l}.xlsx"
+        file_name = path_name / f"g_test_full_{len(config.g_test_options['thr'])}.xlsx"
         file_name.parent.mkdir(parents=True, exist_ok=True)
 
-        optimal_results = g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+        results = g_test_for_different_metrics_and_thrs(config, path_name, file_name)
+        save_full_results_for_g_test(results, file_name)
 
-        file_name_2 = path_name / f"g_test_optimal.xlsx"
-        save_optimal_results_for_g_test(optimal_results, file_name_2)
+
+def compute_optimal_g_test_results(config):
+    from tqdm import tqdm
+    from metric_store import get_metric_names
+    from g_test_for_metrics.optimal_g_test_results import get_g_test_full_results,\
+        parse_g_test_full_results, optimal_g_test_results
+
+    pbar_tracks_sizes = tqdm(config.g_test_options['track_sizes'])
+    for config.g_test_options['track_size'] in pbar_tracks_sizes:
+        pbar_tracks_sizes.set_postfix({'track_size': config.g_test_options['track_size']})
+
+        path_name = config.work_dir
+        path_name /= f"results_{config.prefix_for_preproc_data}_{config.prefix_for_corr}"
+        path_name /= "cyclone_metric_relation"
+        path_name /= f"track_size_{config.g_test_options['track_size']}"
+
+        file_name = path_name / f"g_test_full_{len(config.g_test_options['thr'])}.xlsx"
+
+        metric_names = list(get_metric_names(config, prefix='probability_for_metrics').keys())
+        metric_names = [metric_name[metric_name.find("/") + 1:] for metric_name in metric_names]
+        thrs = [f"thr_{thr}" for thr in list(config.g_test_options['thr'])]
+        results = get_g_test_full_results(file_name, thrs)
+        results = parse_g_test_full_results(results, thrs)
+        optimal_g_test_results(results, metric_names, path_name)
