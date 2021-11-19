@@ -37,7 +37,7 @@ def get_metric_indicators(config, metric_name, metric_prob, thr):
 def g_test(config, metric_name, metric_prob, thr, cyclones_events, subset_mask=None):
     predicted_events = get_metric_indicators(config, metric_name, metric_prob, thr)
     if len(predicted_events) == 0:
-        return pd.DataFrame()
+        g_stat = p_val = tn = fn = fp = tp = 'NA'
     else:
         not_nan_mask = ~np.isnan(metric_prob)
         if not subset_mask is None:
@@ -55,7 +55,7 @@ def g_test(config, metric_name, metric_prob, thr, cyclones_events, subset_mask=N
             CM = np.array([[tn, fn], [fp, tp]])
             g_stat, p_val, dof, expctd = chi2_contingency(CM, lambda_="log-likelihood", correction=False)
 
-        return g_stat, p_val, tn, fn, fp, tp
+    return g_stat, p_val, tn, fn, fp, tp
 
 
 def calc_f1_score(fn, fp, tp):
