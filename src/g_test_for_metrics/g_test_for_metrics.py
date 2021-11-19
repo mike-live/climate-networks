@@ -34,8 +34,9 @@ def get_metric_indicators(config, metric_name, metric_prob, thr):
         return predicted_events
 
 
-def g_test(config, metric_name, metric_prob, thr, cyclones_events, subset_mask=None):
-    predicted_events = get_metric_indicators(config, metric_name, metric_prob, thr)
+def g_test(config, metric_name, metric_prob, thr, cyclones_events, predicted_events=None, subset_mask=None):
+    if predicted_events is None:
+        predicted_events = get_metric_indicators(config, metric_name, metric_prob, thr)
     if len(predicted_events) == 0:
         g_stat = p_val = tn = fn = fp = tp = 'NA'
     else:
@@ -102,6 +103,29 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
         for thr in list(config.g_test_options['thr']):
             pbar_for_metrics.set_postfix({'metric': main_metric_name, 'thr': thr})
             g_stat, p_val, tn, fn, fp, tp = g_test(config, main_metric_name, metric_prob, thr, cyclones_events)
+            if config.g_test_options['need_surrogate']:
+                #g_stat, p_val, tn, fn, fp, tp = g_test(config, main_metric_name, metric_prob, thr, cyclones_events, subset_mask)
+                predicted_events = get_metric_indicators(config, main_metric_name, metric_prob, thr)
+                num_surrogate = 30000
+                g_stats_surrogate = []
+                pbar_surrogate = tqdm(range(num_surrogate))
+                max_g_stat_surrogate = 0
+                for id_surrogate in pbar_surrogate:
+                    random_shift = np.random.randint(cyclones_events.shape[2])
+                    surrogate_events = np.roll(cyclones_events, random_shift, 2)
+                    g_stat_surrogate, *_ = g_test(config, main_metric_name, metric_prob, thr, surrogate_events, predicted_events=predicted_events)
+                    g_stats_surrogate.append(g_stat_surrogate)
+                    if g_stat_surrogate > max_g_stat_surrogate:
+                        max_g_stat_surrogate = g_stat_surrogate
+                        pbar_surrogate.set_postfix({'g_stat': g_stat, 'max_g_stat': max_g_stat_surrogate})
+                    if g_stat_surrogate > g_stat:
+                        print('Yeah!!!', g_stat_surrogate, g_stat)
+
+                surrogate_p_val = np.sum(np.array(g_stats_surrogate) > g_stat)
+                max_g_stat = np.max(g_stats_surrogate)
+            else:
+                surrogate_p_val = 0
+
             if g_stat == 'NA':
                 f1 = b_acc = mcc = 'NA'
             else:
@@ -112,11 +136,11 @@ def g_test_for_different_metrics_and_thrs(config, path_name, file_name):
             sign = get_sign_for_metric(config, main_metric_name)
             results[f"thr_{thr}"] = pd.concat([results[f"thr_{thr}"],
                                                pd.DataFrame({'col1': ['metric_name', 'prob_for_metric', 'g-statistic',
-                                                                      'p-value', 'f1_score', 'balanced_acc',
+                                                                      'surrogate p-value', 'f1_score', 'balanced_acc',
                                                                       'matthews_coef', '', 'NoI', 'YesI', ''],
                                                              'col2': [main_metric_name,
                                                                       sign + str(thr) if type(sign) == str else '',
-                                                                      g_stat, p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
+                                                                      g_stat, surrogate_p_val, f1, b_acc, mcc, 'NoE', tn, fp, ''],
                                                              'col3': ['', '', '', '', '', '', '', 'YesE', fn, tp, '']})],
                                               axis=0)
 
