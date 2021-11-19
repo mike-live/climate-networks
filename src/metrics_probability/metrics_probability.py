@@ -3,7 +3,7 @@ import numpy as np
 
 def compute_greater(metric_array):
     inds = np.argsort(-metric_array)
-    n_greater = np.zeros(len(metric_array), dtype='float32')
+    n_greater = np.zeros(len(metric_array), dtype='int32')
     n_greater[inds] = np.arange(len(metric_array))
     return n_greater
 
