@@ -208,11 +208,12 @@ def compute_cyclone_events(config):
     cyclones_frame = get_cyclones_info(config)
     cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
 
-    track_size = config.g_test_options['track_size']
     track_sizes = config.g_test_options['track_sizes']
+    pbar_tracks_sizes = tqdm(track_sizes)
     file_name_cyclone = "cyclones_events.npz"
     cyclones_events_tracks = {}
-    for track_size in tqdm(track_sizes):
+    for track_size in pbar_tracks_sizes:
+        pbar_tracks_sizes.set_postfix({'track_size': track_size})
         cyclones_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons, track_size)
         cyclones_events_tracks['cyclone_events_' + str(track_size)] = cyclones_events
     np.savez_compressed(file_name_cyclone, **cyclones_events_tracks)
