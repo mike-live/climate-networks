@@ -34,16 +34,20 @@ def get_metric_indicators(config, metric_name, metric_prob, thr):
         return predicted_events
 
 
-def g_test(config, metric_name, metric_prob, thr, cyclones_events):
+def g_test(config, metric_name, metric_prob, thr, cyclones_events, subset_mask=None):
     predicted_events = get_metric_indicators(config, metric_name, metric_prob, thr)
     if len(predicted_events) == 0:
         return pd.DataFrame()
     else:
-        not_nan_mask = np.logical_not(np.isnan(metric_prob))
-        tn = np.sum(np.logical_not(predicted_events) & np.logical_not(cyclones_events) & not_nan_mask)
-        fn = np.sum(np.logical_not(predicted_events) & cyclones_events & not_nan_mask)
-        fp = np.sum(predicted_events & np.logical_not(cyclones_events) & not_nan_mask)
-        tp = np.sum(predicted_events & cyclones_events & not_nan_mask)
+        not_nan_mask = ~np.isnan(metric_prob)
+        if not subset_mask is None:
+            subset_mask &= not_nan_mask
+        else:
+            subset_mask = not_nan_mask
+        tn = np.sum(~predicted_events & ~cyclones_events & subset_mask)
+        fn = np.sum(~predicted_events &  cyclones_events & subset_mask)
+        fp = np.sum( predicted_events & ~cyclones_events & subset_mask)
+        tp = np.sum( predicted_events &  cyclones_events & subset_mask)
 
         if ((tn == 0) and (fn == 0)) or ((fp == 0) and (tp == 0)):
             g_stat = p_val = tn = fn = fp = tp = 'NA'
