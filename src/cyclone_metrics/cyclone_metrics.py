@@ -72,7 +72,7 @@ def get_cyclone_area(cur_lat, cur_lon, lats, lons, track_size=2):
     if ((ind_lon == 0) or (ind_lon == len(lons)-1)) and (np.abs(cur_lon - lons[ind_lon]) > 0.75):
         message = 'Cyclone outside the grid'
 
-    # область = 4 клеток (2 по широте и 2 по долготе)
+    # по умолчанию область = 4 клетки (2 по широте и 2 по долготе)
     window_half = (track_size - 2) // 2
     start_ind_lat = max(0, ind_lat - window_half)
     end_ind_lat = min(ind_lat + 2 + window_half, len(lats))
