@@ -81,23 +81,26 @@ def get_cyclone_area(cur_lat, cur_lon, lats, lons, track_size=2):
 
     return message, start_ind_lat, end_ind_lat, start_ind_lon, end_ind_lon
 
-
-def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons, track_size=2):
+def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons, track_size=2, need_shift=False, shift_lo=20 * 8, shift_hi=50 * 8):
     shapes = (len(lats), len(lons), len(times))
     cyclones_events = np.zeros(shapes, dtype='bool')
-
+    
     for cyclone in cyclones_dict:
         curr_cyc_df = get_cyclone_for_special_number(cyclones_frame, cyclone['number'])
         # дополняем циклон точками каждые три часа (если в таблице нет данных за какое-то время,
         # то берём lon lat как в предыдущей известной временной точке)
         curr_cyc_df = extension_df_for_cyclone(curr_cyc_df)
         curr_cyc_df = full_extended_df_for_cyclone(curr_cyc_df)
-
+        if need_shift:
+            shift = np.random.randint(shift_lo, shift_hi)
+        else:
+            shift = 0
         if not curr_cyc_df.empty:
             for k in range(len(curr_cyc_df)):
                 d = datetime.strptime(curr_cyc_df['Date (DD/MM/YYYY)'][k] + ' ' + curr_cyc_df['Time (UTC)'][k],
                                       '%d/%m/%Y %H%M')
                 ind_time = np.searchsorted(times, d.strftime('%Y.%m.%d %H:%M:%S'))
+                ind_time = (ind_time + shift) % shapes[2]
                 message, start_ind_lat, end_ind_lat, \
                 start_ind_lon, end_ind_lon = get_cyclone_area(float(curr_cyc_df['Latitude (lat.)'][k]),
                                                               float(curr_cyc_df['Longitude (lon.)'][k]),
