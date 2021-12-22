@@ -31,7 +31,7 @@ download_ERA5_options = {
 }
 
 prefix_for_preproc_data = 'land_masked_and_preproc'
-prefix_for_corr = 'window_5d_delay_0d'
+prefix_for_corr = 'window_2d_delay_0d'
 work_dir = project_data_dir / 'ERA5' / '_'.join(['ERA5',
                                                          download_ERA5_options['name_var'].upper(),
                                                          str(download_ERA5_options['start_year']),
@@ -44,7 +44,7 @@ correlations = {
     'work_dir': download_ERA5_options['work_dir'],
     'input_file_name': download_ERA5_options['res_cube_land_masked_and_preproc_file_name'],
     'input_var_name': 'arr_0',
-    'output_correlation_file_name': 'corr_online_' + 'land_masked_and_preproc' + '_window_5d_delay_0d.npy',
+    'output_correlation_file_name': 'corr_online_' + 'land_masked_and_preproc' + '_window_2d_delay_0d.npy',
     'delay_time': 0,
     'window_size': 8 * 5,
     'num_threads': 85,
@@ -56,7 +56,7 @@ correlations = {
 
 metrics = {
     'work_dir': correlations['work_dir'],
-    'output_metrics_dir': 'metrics_corr_' + 'land_masked_and_preproc' + '_window_5d_delay_0d',
+    'output_metrics_dir': 'metrics_corr_' + 'land_masked_and_preproc' + '_window_2d_delay_0d',
     'metric_names_file_name': 'metric_names.npy',
 }
 

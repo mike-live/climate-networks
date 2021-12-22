@@ -10,8 +10,8 @@ def add_input_data_to_metric(config):
     
     file_names = {
         'input_data/MSLP_preproc': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'],
-        'input_data/MSLP': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_and_preproc_file_name'],
-        'input_data/MSLP_land': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_file_name'],
+        'input_data/MSLP': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'],
+        'input_data/MSLP_land': config.download_ERA5_options['work_dir'] / config.download_ERA5_options['res_cube_land_masked_file_name'],
     }
 
     for metric_name, file_name in file_names.items():
