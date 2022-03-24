@@ -218,6 +218,14 @@ def compute_cyclone_events(config):
         cyclones_events_tracks['cyclone_events_' + str(track_size)] = cyclones_events
     np.savez_compressed(file_name_cyclone, **cyclones_events_tracks)
 
+    # Surrogate events
+    file_name_cyclone = "surrogate_events.npz"
+    surrogate_events_tracks = {}
+    for track_size in tqdm(track_sizes):
+        surrogate_events = get_cyclone_events(cyclones_frame, cyclones_dict, all_times, all_lats, all_lons, track_size, need_shift=True)
+        surrogate_events_tracks['surrogate_events_' + str(track_size)] = surrogate_events
+    np.savez_compressed(file_name_cyclone, **surrogate_events_tracks)
+
 
 def compute_metrics_probability(config):
     from pathlib2 import Path
