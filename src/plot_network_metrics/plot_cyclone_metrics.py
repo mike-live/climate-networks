@@ -41,7 +41,9 @@ def plot_metric_probability(cur_cyclone, metric_name, image_path):
     ax.plot(cur_times, cur_prob, zorder=1)
     ax.axhline(0.5, color='gray', zorder=0)
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d %H:%M'))
-    ax.set_title(metric_name)
+    from textwrap import wrap
+    title = "\n".join(wrap(metric_name.replace('/', ' '), width=50)).replace(' ', ' / ').replace('_', ' ')
+    ax.set_title(title)
     ax.set_ylabel('Probability')
     ax.set_ylim([-0.05, 1.05])
 
