@@ -60,6 +60,12 @@ def parse_args():
                         const=True, default=False,
                         help='compute optimal threshold for g-test')
 
+    parser.add_argument('--compute_cyclone_metric_deviation', dest='need_compute_cyclone_metric_deviation', action='store_const',
+                        const=True, default=False,
+                        help='compute cyclone metric maximal deviation over region')
+    parser.add_argument('--plot_local_grid_cyclone_metric_deviation', dest='need_plot_local_grid_cyclone_metric_deviation', action='store_const',
+                        const=True, default=False,
+                        help='plot cyclone metric maximal deviation over region')
     args = parser.parse_args()
     return args
 
@@ -105,3 +111,9 @@ def main():
 
     if args.need_compute_optimal_thr_for_g_test:
         compute_optimal_g_test_results(config)
+
+    if args.need_compute_cyclone_metric_deviation:
+        compute_cyclone_metric_deviation(config)
+
+    if args.need_plot_local_grid_cyclone_metric_deviation:
+        plot_local_grid_cyclone_metric_deviation(config)

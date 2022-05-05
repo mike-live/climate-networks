@@ -109,3 +109,41 @@ def get_cyclone_events(cyclones_frame, cyclones_dict, times, lats, lons, track_s
                     cyclones_events[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time] = True
 
     return cyclones_events
+
+def compute_max_deviation(metric, cyclones_frame, cyclones_dict, all_times, all_lons, all_lats, opt_func='max', track_size=2):
+    local_metric_max_deviation = {}
+
+    for cyclone in cyclones_dict:
+        curr_cyc_df = get_cyclone_for_special_number(cyclones_frame, cyclone['number'])
+        # дополняем циклон точками каждые три часа (если в таблице нет данных за какое-то время,
+        # то берём lon lat как в предыдущей известной временной точке)
+        curr_cyc_df = extension_df_for_cyclone(curr_cyc_df)
+        curr_cyc_df = full_extended_df_for_cyclone(curr_cyc_df)
+    
+        c_metric_max_deviation = []
+        c_times = []
+        if not curr_cyc_df.empty:
+            for k in range(len(curr_cyc_df)):
+                d = datetime.strptime(curr_cyc_df['Date (DD/MM/YYYY)'][k] + ' ' + curr_cyc_df['Time (UTC)'][k],
+                                        '%d/%m/%Y %H%M')
+                cur_time = d.strftime('%Y.%m.%d %H:%M:%S')
+                ind_time = np.searchsorted(all_times, cur_time)
+                
+                message, start_ind_lat, end_ind_lat, \
+                start_ind_lon, end_ind_lon = get_cyclone_area(float(curr_cyc_df['Latitude (lat.)'][k]),
+                                                                float(curr_cyc_df['Longitude (lon.)'][k]),
+                                                                all_lats, all_lons, track_size)
+                res = np.nan
+                if message == '':
+                    if opt_func == 'max':
+                        res = np.nanmax(metric[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time])
+                    elif opt_func == 'min':
+                        res = np.nanmin(metric[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time])
+                c_metric_max_deviation.append(res)
+                c_times.append(cur_time)
+
+        local_metric_max_deviation[create_cyclone_info_string(cyclone)] = {
+            'times': c_times,
+            'metrics': c_metric_max_deviation
+        }
+    return local_metric_max_deviation
