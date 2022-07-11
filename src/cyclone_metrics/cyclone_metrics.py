@@ -147,3 +147,47 @@ def compute_max_deviation(metric, cyclones_frame, cyclones_dict, all_times, all_
             'metrics': c_metric_max_deviation
         }
     return local_metric_max_deviation
+
+def all_cyclones_iterator(cyclones_frame, cyclones_dict):
+    
+    for cyclone in cyclones_dict:
+        cyclone_df = get_cyclone_for_special_number(cyclones_frame, cyclone['number'])
+        cyclone_df = extension_df_for_cyclone(cyclone_df)
+        cyclone_df = full_extended_df_for_cyclone(cyclone_df)
+    
+        if not cyclone_df.empty:
+            yield cyclone, cyclone_df
+
+def cyclone_iterator(cyclone_df, all_times, all_lons, all_lats, track_size=2):
+    for k in range(len(cyclone_df)):
+        d = datetime.strptime(cyclone_df['Date (DD/MM/YYYY)'][k] + ' ' + cyclone_df['Time (UTC)'][k],
+                                '%d/%m/%Y %H%M')
+        cur_time = d.strftime('%Y.%m.%d %H:%M:%S')
+        ind_time = np.searchsorted(all_times, cur_time)
+        
+        message, start_ind_lat, end_ind_lat, \
+        start_ind_lon, end_ind_lon = get_cyclone_area(float(cyclone_df['Latitude (lat.)'][k]),
+                                                      float(cyclone_df['Longitude (lon.)'][k]),
+                                                      all_lats, all_lons, track_size)
+        yield (k, cur_time, ind_time), message == '', (start_ind_lat, end_ind_lat, start_ind_lon, end_ind_lon)
+    
+
+def compute_metric_in_track(metric, cyclones_frame, cyclones_dict, all_times, all_lons, all_lats, track_size=2):
+    local_metric_metric_in_track = {}
+    for cyclone, cyclone_df in all_cyclones_iterator(cyclones_frame, cyclones_dict):
+        c_metric_metric_in_track = []
+        c_times = []
+        for cyclone_time, is_inside, cyclone_region in cyclone_iterator(cyclone_df, all_times, all_lons, all_lats, track_size=track_size):
+            k, cur_time, ind_time = cyclone_time
+            start_ind_lat, end_ind_lat, start_ind_lon, end_ind_lon = cyclone_region
+            res = np.nan
+            if is_inside:
+                res = metric[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time]
+            c_metric_metric_in_track.append(res)
+            c_times.append(cur_time)
+
+            local_metric_metric_in_track[create_cyclone_info_string(cyclone)] = {
+                'times': c_times,
+                'metrics': c_metric_metric_in_track
+            }
+    return local_metric_metric_in_track
