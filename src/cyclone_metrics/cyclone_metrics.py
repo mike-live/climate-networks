@@ -180,9 +180,10 @@ def compute_metric_in_track(metric, cyclones_frame, cyclones_dict, all_times, al
         for cyclone_time, is_inside, cyclone_region in cyclone_iterator(cyclone_df, all_times, all_lons, all_lats, track_size=track_size):
             k, cur_time, ind_time = cyclone_time
             start_ind_lat, end_ind_lat, start_ind_lon, end_ind_lon = cyclone_region
-            res = np.nan
+            res = np.full((end_ind_lat - start_ind_lat, end_ind_lon - start_ind_lon), np.nan, dtype=metric.dtype)
             if is_inside:
                 res = metric[start_ind_lat:end_ind_lat, start_ind_lon:end_ind_lon, ind_time]
+            
             c_metric_metric_in_track.append(res)
             c_times.append(cur_time)
 
