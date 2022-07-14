@@ -120,6 +120,13 @@ cyclone_metrics_options = {
     'plot_probability': True,
 }
 
+event_predictions_options = {
+    'work_dir': download_ERA5_options['work_dir'] / ('event_detection' + '_' + prefix_for_corr),
+    'output_predictions_1d': Path('predictions_1d'),
+    'output_predictions_3d': Path('predictions_3d'),
+    'output_associations_3d': Path('associations_3d'),
+}
+
 import numpy as np
 
 g_test_options = {
