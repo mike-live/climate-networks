@@ -251,6 +251,7 @@ def plot_local_grid_cyclone_metrics(config):
                 plot_metric_probability(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
         del metric
 
+
 def plot_local_grid_cyclone_metric_deviation(config):
     from plot_network_metrics.utils import create_dir, create_cyclone_metric_dir, create_cyclone_dir
     from metric_store import get_metric_names, save_metric, load_metric
