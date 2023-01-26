@@ -160,61 +160,7 @@ def compute_cyclone_metrics(config):
             path_to_file = "/".join((config.cyclone_metrics_options['output_local_metrics_dir'] / metric_name).parts)
             save_metric(config, local_metric_means_stds, path_to_file)
             #local_metric_means_stds = load_metric(config, path_to_file)
-
-def compute_cyclone_metric_deviation(config):
-    from corr_network import load_data, get_available_mask
-    from metric_store import get_metric_names, save_metric, load_metric
-    from network_metrics import prepare_metric
-    from plot_network_metrics.utils import get_times_lats_lots  ###
-    from cyclones_info.cyclones_info import get_cyclones_info, get_cyclones
-    from cyclone_metrics import compute_max_deviation, compute_metric_in_track
-    from tqdm import tqdm
-    from g_test_for_metrics.g_test_for_metrics import get_sign_for_metric
-
-    all_times, all_lats, all_lons = get_times_lats_lots(config)
-    cyclones_frame = get_cyclones_info(config)
-    cyclones_dict = get_cyclones(cyclones_frame, config.cyclone_metrics_options)
-
-    data = load_data(config)
-    available_mask = get_available_mask(data)
-    prefix = ['probability_for_metrics']
-    metric_names = get_metric_names(config, prefix=prefix)
-    track_sizes = config.g_test_options['track_sizes']
-
-    for metric_name in tqdm(metric_names):
-        main_metric_name = metric_name[metric_name.find("/") + 1:]
-        sign = get_sign_for_metric(config, main_metric_name)
-        if sign == -1:
-            print(metric_name)
-            continue
-        
-        metric = load_metric(config, metric_name)
-        metric = prepare_metric(metric_name, metric, available_mask)
-        if config.metric_dimension[main_metric_name] == '2D':
-            for track_size in tqdm(track_sizes):
-                local_metric_max_deviation = compute_max_deviation(
-                    metric, cyclones_frame, cyclones_dict, all_times, all_lons, 
-                    all_lats, opt_func='max' if sign == '>' else 'min', track_size=track_size
-                )
-                path_to_file = "/".join((
-                    config.cyclone_metrics_options['output_local_metrics_max_deviation_dir'] / 
-                    (f'track_size_{track_size}') / 
-                    metric_name
-                ).parts)
-                save_metric(config, local_metric_max_deviation, path_to_file)
-
-
-                local_metric_metric_in_track = compute_metric_in_track(
-                    metric, cyclones_frame, cyclones_dict, 
-                    all_times, all_lons, all_lats, track_size=track_size
-                )
-                path_to_file = "/".join((
-                    config.cyclone_metrics_options['output_local_metric_metric_in_track_dir'] / 
-                    (f'track_size_{track_size}') / 
-                    metric_name
-                ).parts)
-                save_metric(config, local_metric_metric_in_track, path_to_file)
-                
+              
 
 
 def plot_local_grid_cyclone_metrics(config):
@@ -243,8 +189,8 @@ def plot_local_grid_cyclone_metrics(config):
         print(metric_name, len(metric))
         from plot_network_metrics.plot_cyclone_metrics import plot_local_grid_metric, plot_metric_probability
         for cid, (cyclone, (cyclone_name, cur_cyclone_metric)) in enumerate(zip(cyclones_dict, metric.items())):
-            if np.sum(~np.isnan(cur_cyclone_metric['metrics'])) < 4:
-                continue
+            #if np.sum(~np.isnan(cur_cyclone_metric['metrics'])) < 4:
+            #    continue
             cyclone_metric_dir = create_cyclone_dir(config, cyclone, cyclones_dir)
             plot_local_grid_metric(cur_cyclone_metric, metric_name, image_path=cyclone_metric_dir)
             if config.cyclone_metrics_options['plot_probability']:
@@ -319,12 +265,12 @@ def compute_cyclone_events(config):
         surrogate_events_tracks['surrogate_events_' + str(track_size)] = surrogate_events
     np.savez_compressed(file_name_cyclone, **surrogate_events_tracks)
 
-
 def compute_metrics_probability(config):
     from pathlib2 import Path
     from corr_network import load_data, get_available_mask
     from metric_store import get_metric_names, load_metric, save_metric
     from metrics_probability.metrics_probability import compute_probability_for_metrics
+    from plot_network_metrics.utils import get_times_lats_lots, get_sond_times
     from network_metrics import prepare_metric
     from tqdm import tqdm
 
@@ -332,6 +278,8 @@ def compute_metrics_probability(config):
     available_mask = get_available_mask(data)
     prefix = ['diff_metrics', 'network_metrics', 'input_data']
     metric_names = get_metric_names(config, prefix=prefix)
+    all_times, all_lats, all_lons = get_times_lats_lots(config)
+    sond_time_inds = get_sond_times(config, all_times)
 
     pbar_for_metrics = tqdm(metric_names)
     for metric_name in pbar_for_metrics:
@@ -343,6 +291,9 @@ def compute_metrics_probability(config):
             path_to_file = "/".join((Path('probability_for_metrics') / metric_name).parts)
             save_metric(config, prob, path_to_file)
 
+            prob_sond = compute_probability_for_metrics(metric[:, :, sond_time_inds])
+            path_to_file = "/".join((Path('sond') / 'probability_for_metrics' / metric_name).parts)
+            save_metric(config, prob_sond, path_to_file)
 
 def compute_g_test(config):
     from g_test_for_metrics.g_test_for_metrics import g_test_for_different_metrics_and_thrs, \

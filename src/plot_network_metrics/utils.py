@@ -12,6 +12,12 @@ def get_times_lats_lots(config):
     lons = np.loadtxt(file_name, dtype='float', delimiter='\n')
     return times, lats, lons
 
+def get_times_subset(all_times, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]):
+    selected_time_inds = [ind for ind, time in enumerate(all_times) if int(time[5:7]) in months]
+    return selected_time_inds
+
+def get_sond_times(config, all_times):
+    return get_times_subset(all_times, months=config.prob_metrics["sond_months"])
 
 def get_considered_years(config):
     start_year = int(config.metrics_plot_options['start_time'][0:4])
