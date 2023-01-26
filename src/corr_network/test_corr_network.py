@@ -16,7 +16,7 @@ from time import time
 
 num_threads = 1
 
-from .parallel_maker import parallel_execute, make_args
+from helpers.parallel_maker import parallel_execute, make_args
 from . import kendaltau_corr
 from . import kendaltau_corr_online
 from . import kendaltau_corr_scipy
@@ -26,8 +26,12 @@ import numpy as np
 import os
 from pathlib2 import Path
 
-work_dir = Path(r'../../../data/SST/All2019_6h_0.75resolution')
-file_name = 'resulting_cube_All2019_6h_0.75resolution.npz'
+#work_dir = Path(r'../../../data/SST/All2019_6h_0.75resolution')
+#file_name = 'resulting_cube_All2019_6h_0.75resolution.npz'
+
+work_dir = Path(r'D:\Work\data\ERA5\ERA5_MSL_1982_2020_3h_0.75')
+file_name = 'resulting_cube.npz'
+
 data = np.load(work_dir / file_name)
 data_s = data['arr_0'].transpose((1, 2, 0))
 
@@ -60,14 +64,14 @@ print(data.shape)
 
 #tau_corr = np.zeros((2, 2, 90), dtype = np.float64)
 #test(tau_corr, np.zeros((10, 10)), np.array(list(range(10))))
-delay_time = 70
-window_size = 130
+delay_time = 8
+window_size = 8 * 2
 
 ###############################################################################################################################################
 
 tau_corr = np.zeros((nm, nm, nt), dtype = np.float64)
-#kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-#print('sum1:', tau_corr.sum())
+kendaltau_corr_online.compute_tau_kendall_overall_online(tau_corr, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+print('sum1:', tau_corr.sum())
 
 ans = np.zeros((nm, nm, nt), dtype = np.float64)
 kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
@@ -75,10 +79,10 @@ print('ans1 = ', ans.sum())
 print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
 
 
-ans = np.zeros((nm, nm, nt), dtype = np.float64)
-kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
-print('ans1 = ', ans.sum())
-print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
+# ans = np.zeros((nm, nm, nt), dtype = np.float64)
+# kendaltau_corr.compute_tau_kendall_overall(ans, data, np.arange(nm), delay_time = delay_time, window_size = window_size)
+# print('ans1 = ', ans.sum())
+# print('diff1 = ', (np.abs(ans - tau_corr)).max(), np.allclose(ans, tau_corr))
 
 sans = kendaltau_corr_scipy.compute_tau_kendall_overall(data, delay_time = delay_time, window_size = window_size)
 print('ans2 = ', sans.sum())
