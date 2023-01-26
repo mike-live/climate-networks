@@ -64,6 +64,22 @@ def get_cyclones(cyclones_frame, options):
             cyclones.append(cyclone)
     return cyclones
 
+def filter_cyclones_by_time(cyclones, selected_times, inside=True):
+    selected_times = set(selected_times)
+    def time_filter(cyclone, selected_times=selected_times):
+        start, end = cyclone['start'], cyclone['end']
+        #start = datetime.strptime(start, '%Y.%m.%d %H:%M:%S')
+        #end = datetime.strptime(end, '%Y.%m.%d %H:%M:%S')
+        if inside:
+            return start in selected_times and end in selected_times
+        else:
+            return start in selected_times or end in selected_times
+    
+    filtered_cyclones = list(filter(time_filter, cyclones))
+    return filtered_cyclones
+        
+    
+
 
 def get_only_known_data(frame):
     l1 = list(map(check_is_number, frame['Longitude (lon.)'].values))
