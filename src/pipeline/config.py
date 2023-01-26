@@ -75,6 +75,9 @@ diff_metrics = {
     'output_diff_metrics_dir': Path('diff_metrics'),
 }
 
+prob_metrics = {
+    'sond_months': [9, 10, 11, 12]
+}
 
 cyclones_info = {
     'cyclones_file_name': 'tropical_cyclones_data_1982_2020.csv',
