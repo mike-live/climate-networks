@@ -13,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
 from . import utils
 from . import plot_cyclones
-
+from matplotlib.backends.backend_pdf import PdfPages
 
 def get_cmap():
     cmap_im = cv2.imread('cmap.png')
@@ -67,6 +67,7 @@ def get_boundary_coordinates(config):
 
 
 def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclones_frame, cyclone):
+    
     # metric - 3D np.ndarray (lat, lon, time)
 
     times, lat, lon = utils.get_times_lats_lots(config)
@@ -80,7 +81,8 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclones_
     cmap = get_cmap()
     
     for t in tqdm(considered_times):
-        fig = plt.figure(figsize=(10, 10))
+        
+        fig = plt.figure(figsize=(7, 4))
         ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=central_longitude))
         plot_map_area(ax, [west, east, south, north])
 
@@ -88,7 +90,7 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclones_
         levels = np.linspace(vmin, vmax, num_levels + 1)
         cf = ax.contourf(lon, lat, metric[:, :, np.where(times == t)[0][0]], cmap=cmap,
                          levels=levels, vmin=vmin, vmax=vmax, transform=ccrs.PlateCarree())
-        cb = fig.colorbar(cf, shrink=0.46)
+        cb = fig.colorbar(cf) # , shrink=0.46
         cb.set_label(config.metrics_plot_options['metric_name'], rotation=270, labelpad=20)
 
         ax.set_title(datetime.strptime(t, '%Y.%m.%d %H:%M:%S').strftime('%d %b %Y %H:%M:%S'))
@@ -105,7 +107,12 @@ def plot_2d_metric_on_map(metric, considered_times, config, directory, cyclones_
         ind = str(considered_times.index(t) + 1)
         file_name = directory / (config.metrics_plot_options['metric_name'].replace('/', '_') + '_#' + ind + '_' + t_form + '.png')
         #file_name.parent.mkdir(parents=True, exist_ok=True)
+        
         plt.savefig(file_name, dpi=config.metrics_plot_options['dpi'], bbox_inches='tight')
+
+        with PdfPages(file_name.with_suffix('.pdf')) as pdf:
+            pdf.savefig(fig)
+
         plt.close()
 
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_local_grid_metric(cur_cyclone, metric_name, image_path):
     cur_times = pd.to_datetime(cur_cyclone['times']).values
@@ -26,6 +26,9 @@ def plot_local_grid_metric(cur_cyclone, metric_name, image_path):
     file_name = image_path / (metric_name + '_mean_std.png')
     file_name.parent.mkdir(parents=True, exist_ok=True)
     
+    with PdfPages(file_name.with_suffix('.pdf')) as pdf:
+        pdf.savefig(fig)
+
     plt.savefig(file_name)
     plt.close()
 
@@ -52,6 +55,9 @@ def plot_metric_probability(cur_cyclone, metric_name, image_path):
 
     file_name = image_path / (metric_name + '_probability.png')
     file_name.parent.mkdir(parents=True, exist_ok=True)
+
+    with PdfPages(file_name.with_suffix('.pdf')) as pdf:
+        pdf.savefig(fig)
 
     plt.savefig(file_name)
     plt.close()
