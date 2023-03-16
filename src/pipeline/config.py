@@ -130,6 +130,10 @@ event_predictions_options = {
     'output_associations_3d': Path('associations_3d'),
 }
 
+distance_covariance_options = {
+    'work_dir': download_ERA5_options['work_dir'] / ('distance_covariance' + '_' + prefix_for_corr),
+}
+
 import numpy as np
 
 g_test_options = {
