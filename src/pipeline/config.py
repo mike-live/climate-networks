@@ -53,6 +53,7 @@ correlations = {
 
 prefix_for_preproc_data = 'land_masked_and_preproc'
 prefix_for_corr = f'window_{correlations["window_size"] // 8}d_delay_{correlations["delay_time"] // 8}d'
+#prefix_for_corr = f'window_{correlations["window_size"] // 8}d_delay_{correlations["delay_time"] * 3}h'
 correlations['output_correlation_file_name'] = 'corr_online_' + 'land_masked_and_preproc' + '_' + prefix_for_corr + '.npy'
 
 
@@ -92,13 +93,17 @@ metrics_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'metric_name': 'LCC',
-    'metric_names': None,
+    'metric_names': [
+        'network_metrics/LCC_w', 
+        'network_metrics/LCC_0.95', 
+        'network_metrics/LCC_0.9'
+    ],
     'time_split': None,    # 'years', 'months', None
     'images_dir': 'images',
-    'start_time': '2004.09.29 00:00:00',
-    'end_time': '2004.10.05 00:00:00',
+    'start_time': '2018.11.01 00:00:00', # 2018.11.01 00:00:00 # 2019.06.01 00:00:00
+    'end_time': '2019.12.31 00:00:00', # 2018.12.31 00:00:00 # 2019.12.31 00:00:00
     'step_time_in_hours': 24,
-    'dpi': 200,
+    'dpi': 300,
     'scaling_by_selected_data': False,
     'plot_cyclones': True,
 }
@@ -107,8 +112,8 @@ cyclones_plot_options = {
     'work_dir': download_ERA5_options['work_dir'],
     'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'images_dir': 'cyclones',
-    'start_time': '1982.11.27 00:00:00',
-    'end_time': '1982.11.30 00:00:00',
+    'start_time': '2018.11.01 00:00:00',
+    'end_time': '2019.12.31 00:00:00',
     'n_3h_intervals_before_after': 2 * 8, 
 }
 
@@ -117,9 +122,10 @@ cyclone_metrics_options = {
     'cyclones_file_name': cyclones_info['cyclones_file_name'],
     'output_local_metrics_dir': Path('local_grid_metrics_for_cyclones'),
     'output_local_metrics_max_deviation_dir': Path('lgm_deviation_for_cyclones'),
-    'output_local_metric_metric_in_track_dir': Path('lgm_metric_in_track_for_cyclones'),
-    'start_time': '1982.01.01 00:00:00',
-    'end_time': '2020.12.31 21:00:00',
+    'output_local_metric_in_track_dir': Path('lgm_metric_in_track_for_cyclones'),
+    'output_local_metric_in_track_shifted_dir': Path('lgm_metric_in_track_for_cyclones_shifted'),
+    'start_time': '2018.11.01 00:00:00',
+    'end_time': '2019.12.31 00:00:00',
     'plot_probability': True,
 }
 
@@ -142,7 +148,7 @@ g_test_options = {
     #'thr': [0.0, 0.25, 0.5, 0.75, 1.0],  # threshold list for metric indication
     #'thr': [0.001],
     'track_size': 8,
-    'track_sizes': [2, 4, 6, 8, 10, 12], #
+    'track_sizes': [2, 4], # [2, 4, 6, 8, 10, 12]
     'less': ['network_metrics/LCC', 'network_metrics/LCC_w', 'network_metrics/closeness_w', 'network_metrics/LCC_0.9',
              'network_metrics/LCC_0.95', 'diff_metrics/network_metrics/LCC', 'diff_metrics/network_metrics/LCC_w',
              'diff_metrics/network_metrics/LCC_0.9', 'diff_metrics/network_metrics/LCC_0.95',
